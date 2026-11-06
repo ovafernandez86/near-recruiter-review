@@ -320,8 +320,19 @@ dialog::backdrop{background:rgba(16,30,46,.45)}
 .sumlist dt{color:var(--muted)}
 .sumlist dd{margin:0;font-weight:600;overflow-wrap:anywhere}
 .dlg .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.reqlist{margin:0 0 12px;padding:0;list-style:none;font-size:13px}
-.reqlist li{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0;gap:8px}
+.reqtable{font-size:13px;margin:8px 0 0}
+.reqtable th,.reqtable td{padding:7px 8px 7px 0}
+.reqtable td:first-child{font-weight:600}
+.reqtable td:nth-child(-n+2){white-space:nowrap}
+.reqtable .said{display:block;margin-top:2px;color:var(--muted)}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn.ai{display:inline-flex;align-items:center;gap:6px;background:var(--info-bg);border-color:#c5cdf8;color:var(--accent);font-weight:600}
+.btn.ai:hover{border-color:var(--accent)}
+.sugg{list-style:none;margin:8px 0 0;padding:0}
+.sugg li{border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;margin-top:6px}
+.sugg label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.sugg input{margin-top:3px}
+.sugg .ev{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 
 /* toast + try */
 .toast{position:fixed;right:24px;bottom:20px;max-width:520px;background:var(--dark);color:#fff;border-radius:var(--r);padding:12px 40px 12px 14px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:20}
@@ -383,7 +394,7 @@ dialog::backdrop{background:rgba(16,30,46,.45)}
     <li data-t="2"><span class="ck" aria-hidden="true"></span><span class="tx">Open Bruno M. and resolve the <b>5+ years backend</b> conflict: mark it as <b>Meets</b> or <b>Doesn't meet</b>.</span></li>
     <li data-t="7"><span class="ck" aria-hidden="true"></span><span class="tx">Ana R. meets every must-have. Click <b>Add to batch</b> on that row.</span></li>
     <li data-t="3"><span class="ck" aria-hidden="true"></span><span class="tx">Open Diego S., click <b>Add to batch</b> and add a note on why to send now.</span></li>
-    <li data-t="4"><span class="ck" aria-hidden="true"></span><span class="tx">The client asked for fintech experience. Click <b>Add requirement</b>, add it as a must-have and see what changes.</span></li>
+    <li data-t="4"><span class="ck" aria-hidden="true"></span><span class="tx">The client asked for fintech experience. Click <b>See requirements</b> and add it as a must-have, by hand with <b>Add requirement</b> or with <b>Suggest must-haves</b>. See what changes.</span></li>
     <li data-t="5"><span class="ck" aria-hidden="true"></span><span class="tx">On Carla T.'s row, click <b>Or add a note to send it anyway</b> and update the note.</span></li>
     <li data-t="6"><span class="ck" aria-hidden="true"></span><span class="tx">Click <b>View batch</b>, add any note it asks for, click <b>Next</b> and finish with <b>Mark as sent</b>.</span></li>
   </ol>
@@ -472,7 +483,7 @@ const R1 = (name,file)=>({name,file,screen:true,internal:'4/4 must-haves and eli
 const SENT_R1_TS = T0-14*86400e3-3*3600e3;
 const SENT0 = ()=>[{round:1,date:'Oct 22',time:'11:05',ts:SENT_R1_TS,channel:'Email',recipients:'hiring@acme.example, cto@acme.example',
   items:[R1('Lucas F.','LucasF_resume.pdf'),R1('Sofía K.','SofiaK_resume.pdf'),R1('Tomás B.','TomasB_resume.pdf'),R1('Julia N.','JuliaN_resume.pdf')],
-  stage:{'Lucas F.':{k:'rejected',said:'No fintech or payments background.'},'Sofía K.':{k:'offer',said:'Great culture fit; offer sent Nov 3.'},'Tomás B.':{k:'interviewing',said:'Technical interview on Nov 7.'},'Julia N.':{k:'review'}}}];
+  stage:{'Lucas F.':{k:'rejected',said:'No fintech or payments background.'},'Sofía K.':{k:'offer',said:'Great culture fit; offer sent Nov 3.'},'Tomás B.':{k:'interviewing',said:'Technical interview on Nov 7. His fintech side projects stood out.'},'Julia N.':{k:'review'}}}];
 const SENTC = (id,name,hunter,file,note)=>({id,rcv:16*24,name,hunter,file,dur:1000,screen:'ok',note,sentAt:'Oct 22',sentTs:SENT_R1_TS,
   r:{en:E('v','Fluent.','screening',120),yrs:E('v','Backend for 6+ years.','resume'),bud:E('v','Within budget.','note'),node:E('v','Node.js in resume.','resume'),aws:E('v','','resume'),pg:E('v','','resume'),ms:E('v','','resume'),elig:ELIG_OK},
   decision:{v:'present',note:''}});
@@ -610,14 +621,14 @@ function roleView(){
     <div>
       <div class="client">Client <b>Acme Co.</b> · Round ${currentRound()} <span class="small muted" title="A round is one candidate batch for this job opening">(candidate batch)</span></div>
       <h1>Sr Backend Engineer</h1>
-      <div class="small muted"><button class="link" data-act="editReqs">Add requirement</button></div>
+      <div class="small muted"><button class="link" data-act="editReqs">See requirements</button></div>
     </div>
     <div class="batchbox">
-      <button class="btn pri" data-act="prepare" ${b?'':'disabled aria-describedby="batchWhy"'}>View batch (${b})</button>
+      <button class="btn pri ib" data-act="prepare" ${b?'':'disabled aria-describedby="batchWhy"'}>${ico('batch')}View batch (${b})</button>
       ${b?'':`<div class="why" id="batchWhy">${h(why)}</div>`}
     </div>
   </div>
-  ${S.banner?`<div class="banner"><span>New must-have${S.banner.from==='Client feedback'?` from client feedback (${h(S.banner.date)})`:''}: <b>${h(S.banner.label)}</b>. ${S.banner.said?`Client said: "${h(S.banner.said)}" `:''}${(n=>n?`${n} candidate${n===1?'':'s'} not verified against it.`:'All candidates checked against it.')(S.cands.filter(c=>!c.sentAt&&ent(c,{id:S.banner.id}).s==='u').length)}</span> <button class="link" data-act="mode" data-v="matrix">View by requirement</button></div>`:''}
+  ${S.banner?(B=>{const ids=B.ids||[B.id], many=ids.length>1; return `<div class="banner"><span>New must-have${many?'s':''}${B.from==='Client feedback'?` from client feedback${B.date?` (${h(B.date)})`:''}`:''}: <b>${h(B.label)}</b>. ${B.said?`Client said: "${h(B.said)}" `:''}${(n=>n?`${n} candidate${n===1?'':'s'} not verified against ${many?'them':'it'}.`:`All candidates checked against ${many?'them':'it'}.`)(S.cands.filter(c=>!c.sentAt&&ids.some(id=>ent(c,{id}).s==='u')).length)}</span> <button class="link" data-act="mode" data-v="matrix">View by requirement</button></div>`})(S.banner):''}
   ${tiles()}
   <div class="secthead">
     <h2 class="sect">Review and send <span class="small muted">· ${(()=>{const t=sections.review.length, n=sectionMatches('review').length; return (S.q&&!discardedFilter||S.filter&&!discardedFilter)?`${n} of ${t} candidate${t===1?'':'s'}`:`${t} candidate${t===1?'':'s'}`;})()}</span> <span class="small muted">· from hunter to client</span></h2>
@@ -847,7 +858,8 @@ const ICON={
   present:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
   dont:'<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
   contact:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-  note:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'};
+  note:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  batch:'<path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/>'};
 const ico=k=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
 function decisionHead(c){
   if(c.sentAt){ const b=S.sent.find(x=>x.items.some(i=>i.name===c.name)), st=(b&&b.stage||{})[c.name]||{k:'review'};
@@ -989,12 +1001,36 @@ function openDialog(html,focusSel){
 }
 dlg.addEventListener('close',()=>{returnFocus&&document.contains(returnFocus)&&returnFocus.focus()});
 let reqDraft=null;
+const AI_ICON='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg>';
+/* Illustrative AI suggestions: must-haves missing from the list, given client feedback on sent rounds and similar Near job openings. */
+function suggestions(){
+  const quotes=S.sent.flatMap(b=>Object.entries(b.stage||{}).filter(([,st])=>/fintech|payments/i.test(st.said||'')).map(([n,st])=>({n,round:b.round,k:st.k,said:st.said})));
+  const out=[];
+  if(quotes.length>1) out.push({key:'fin',label:'Fintech experience',reason:'Recurrent client feedback',ev:quotes.map(q=>`Round ${q.round}, ${q.n} (${STAGE[q.k]||q.k}): "${q.said}"`),from:'Client feedback',said:(quotes.find(q=>q.k==='rejected')||quotes[0]).said});
+  out.push({key:'sd',label:'System design',reason:'Common in similar Near roles',ev:['Must-have in 3 of 4 similar Sr Backend Engineer job openings (illustrative).'],from:'Similar Near roles',said:''});
+  return out.filter(x=>!S.reqs.some(q=>q.label.toLowerCase().includes(x.label.split(' ')[0].toLowerCase())));
+}
+function suggBlock(d){
+  const n=d.sugg.filter(x=>x.on).length;
+  if(!d.sugg.length) return `<p class="small" style="margin-top:14px" role="status">No missing must-haves found in client feedback or similar Near job openings.</p><div class="acts"><button class="btn" data-act="dismissSugg">Back</button></div>`;
+  return `<h2 style="font-size:15px;margin-top:16px;display:flex;align-items:center;gap:6px" id="sgH" tabindex="-1">${AI_ICON}Suggested must-haves</h2>
+  <p class="small muted" style="margin:2px 0 0">AI suggestion. Nothing is added until you save.</p>
+  <ul class="sugg">${d.sugg.map((x,i)=>`<li><label><input type="checkbox" data-act="sg-pick" data-i="${i}" ${x.on?'checked':''}><span><b>${h(x.label)}</b> <span class="tag">${h(x.reason)}</span>${x.ev.map(e=>`<span class="ev">${h(e)}</span>`).join('')}</span></label></li>`).join('')}</ul>
+  <div class="help">Candidates not yet sent will show each saved must-have as Not verified. Candidates in the batch stay in it: before sending, mark it for each one or add a note.</div>
+  <div class="acts"><button class="btn" data-act="dismissSugg">Dismiss</button><button class="btn pri" data-act="saveSugg" ${n?'':'disabled'}>${n>1?`Save ${n} requirements`:'Save requirement'}</button></div>`;
+}
+function addReq(d){
+  const id='q'+Date.now()+Math.random().toString(36).slice(2,6);
+  S.reqs.push({id,label:d.label,type:d.type,from:d.from,date:d.date||'',said:d.said||'',via:d.via||'',isNew:true});
+  S.cands.forEach(x=>{ if(!x.sentAt){ x.r[id]={s:'u',ev:''}; if(d.type==='must'&&x.decision.v==='present'){ x.decision.needsNote=true; x.decision.newReqs=[...(x.decision.newReqs||[]),id]; } } });
+  return id;
+}
 function reqDialog(){
   const d=reqDraft;
   const help = d.type==='must'?"Candidates not yet sent will show this as Not verified, so those who meet every must-have move to To confirm. Candidates in the batch stay in it: before sending, mark it for each one or add a note.":"Shown for reference. It doesn't change candidate status.";
   dlg.innerHTML=`<div class="dlg"><h2 id="dlgTitle">Requirements</h2>
-  <ul class="reqlist">${S.reqs.map(q=>`<li><span>${h(q.label)} <span class="mh">${q.type==='must'?'Must-have':'Nice-to-have'}</span></span><span class="small muted">Added from ${h(q.from)}${q.date?' · '+h(q.date):''}${q.said?`: "${h(q.said)}"`:''}</span></li>`).join('')}</ul>
-  <h2 style="font-size:15px">Add requirement</h2>
+  <table class="reqtable"><caption class="sr">Requirements for this job opening</caption><thead><tr><th scope="col">Requirement</th><th scope="col">Type</th><th scope="col">Added from</th></tr></thead><tbody>${[...S.reqs.filter(q=>q.type==='must'),...S.reqs.filter(q=>q.type!=='must')].map(q=>`<tr><td>${h(q.label)}</td><td>${q.type==='must'?'Must-have':'Nice-to-have'}</td><td>${h(q.from)}${q.date?' · '+h(q.date):''}${q.via?' · '+h(q.via):''}${q.said?`<span class="said">Client said: "${h(q.said)}"</span>`:''}</td></tr>`).join('')}</tbody></table>
+  ${d.open?`<h2 style="font-size:15px;margin-top:16px">Add requirement</h2>
   <label for="nr" class="small" style="font-weight:600">Requirement</label><input type="text" id="nr" data-act="rq-label" value="${h(d.label)}" ${d.err?'aria-invalid="true" aria-describedby="nrErr"':''}>
   ${d.err?`<div class="err" id="nrErr">Requirement not saved. Add a name for it.</div>`:''}
   <fieldset style="border:0;padding:0;margin:10px 0"><legend class="small" style="font-weight:600">Type</legend>
@@ -1003,7 +1039,12 @@ function reqDialog(){
   <fieldset style="border:0;padding:0;margin:0 0 10px"><legend class="small" style="font-weight:600">Added from</legend>
     <label><input type="radio" name="rf" value="Kickoff" data-act="rq-from" ${d.from==='Kickoff'?'checked':''}> Kickoff</label> &nbsp; <label><input type="radio" name="rf" value="Client feedback" data-act="rq-from" ${d.from==='Client feedback'?'checked':''}> Client feedback</label></fieldset>
   ${d.from==='Client feedback'?`<label for="rd" class="small" style="font-weight:600">Date</label><div class="datefield"><input type="date" id="rd" data-act="rq-date" value="${h(d.date)}" max="${TODAY_ISO}"><span class="dateshow" id="rdShow" aria-hidden="true">${longDate(d.date)}</span></div><label for="rs" class="small" style="font-weight:600;display:block;margin-top:8px">What did the client say?</label><textarea id="rs" data-act="rq-said">${h(d.said)}</textarea>`:''}
-  <div class="acts"><button class="btn" data-act="closeDlg">Cancel</button><button class="btn pri" data-act="saveReq">Save requirements</button></div></div>`;
+  <div class="acts"><button class="btn" data-act="cancelReqForm">Cancel</button><button class="btn pri" data-act="saveReq">Save requirement</button></div>`
+  :d.sugg==='loading'?`<p class="small muted" style="margin-top:14px" role="status">Looking for missing must-haves in client feedback and similar Near job openings…</p>
+  <div class="acts"><button class="btn" data-act="dismissSugg">Cancel</button></div>`
+  :Array.isArray(d.sugg)?suggBlock(d)
+  :`<div class="addrow"><button class="btn sm" data-act="openReqForm">+ Add requirement</button><button class="btn sm ai" data-act="suggestReqs">${AI_ICON}Suggest must-haves</button></div>
+  <div class="acts"><button class="btn" data-act="closeDlg">Close</button></div>`}</div>`;
 }
 
 /* ---------- render ---------- */
@@ -1236,19 +1277,32 @@ document.addEventListener('click',e=>{
       t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); return; }
     case 'clearSearch': S.q=''; render('#q'); document.getElementById('live').textContent='Search cleared.'; return;
     case 'toggleRecord': S.recordOpen=!S.recordOpen; render('[data-act=toggleRecord]'); return;
-    case 'editReqs': reqDraft={label:'',type:'must',from:'Client feedback',date:TODAY_ISO,said:'',err:false}; returnFocus=el; reqDialog(); dlg.showModal(); document.getElementById('nr').focus(); return;
+    case 'editReqs': reqDraft={open:false,label:'',type:'must',from:'Client feedback',date:TODAY_ISO,said:'',err:false}; returnFocus=el; reqDialog(); dlg.showModal(); dlg.querySelector('[data-act=openReqForm]').focus(); return;
+    case 'suggestReqs': { const d=reqDraft; d.sugg='loading'; reqDialog(); dlg.querySelector('[data-act=dismissSugg]').focus();
+      setTimeout(()=>{ if(reqDraft!==d||d.sugg!=='loading'||!dlg.open) return; d.sugg=suggestions().map(x=>({...x,on:true})); reqDialog(); (dlg.querySelector('#sgH')||dlg.querySelector('[data-act=dismissSugg]')).focus(); },700); return; }
+    case 'dismissSugg': reqDraft.sugg=null; reqDialog(); dlg.querySelector('[data-act=suggestReqs]').focus(); return;
+    case 'sg-pick': reqDraft.sugg[+el.dataset.i].on=el.checked; reqDialog(); dlg.querySelector(`[data-act=sg-pick][data-i="${el.dataset.i}"]`).focus(); return;
+    case 'saveSugg': {
+      const picked=reqDraft.sugg.filter(x=>x.on); if(!picked.length) return;
+      S.reqs.forEach(q=>q.isNew=false);
+      const ids=picked.map(x=>addReq({label:x.label,type:'must',from:x.from,said:x.said,via:'AI suggestion'}));
+      S.version++;
+      S.banner={ids,label:picked.map(x=>x.label).join(' and '),from:picked.length===1?picked[0].from:'',date:'',said:picked.length===1&&picked[0].from==='Client feedback'?picked[0].said:''};
+      reqDraft=null; dlg.close(); S.view='role'; render();
+      toast(picked.length>1?`${picked.length} requirements saved. ${picked.map(x=>x.label).join(' and ')} are new must-haves; candidates not yet sent now show them as Not verified.`:`Requirement saved. ${picked[0].label} is a new must-have; candidates not yet sent now show it as Not verified.`);
+      return; }
+    case 'openReqForm': reqDraft.open=true; reqDialog(); document.getElementById('nr').focus(); return;
+    case 'cancelReqForm': Object.assign(reqDraft,{open:false,label:'',type:'must',from:'Client feedback',date:TODAY_ISO,said:'',err:false}); reqDialog(); dlg.querySelector('[data-act=openReqForm]').focus(); return;
     case 'saveReq': {
       const d=reqDraft;
       if(!d.label.trim()){ d.err=true; reqDialog(); document.getElementById('nr').focus(); return; }
-      const id='q'+Date.now();
       S.reqs.forEach(q=>q.isNew=false);
       const shown=shortDate(d.date);
-      S.reqs.push({id,label:d.label.trim(),type:d.type,from:d.from,date:d.from==='Client feedback'?longDate(d.date):'',said:d.said,isNew:true});
-      S.cands.forEach(x=>{ if(!x.sentAt){ x.r[id]={s:'u',ev:''}; if(d.type==='must'&&x.decision.v==='present'){ x.decision.needsNote=true; x.decision.newReqs=[...(x.decision.newReqs||[]),id]; } } });
+      const id=addReq({label:d.label.trim(),type:d.type,from:d.from,date:d.from==='Client feedback'?longDate(d.date):'',said:d.said});
       S.version++;
       if(d.type==='must') S.banner={id,label:d.label.trim(),date:shown,from:d.from,said:d.from==='Client feedback'?d.said.trim():''};
       reqDraft=null; dlg.close(); S.view='role'; render();
-      toast(d.type==='must'?`Requirements saved. ${d.label.trim()} is a new must-have; candidates not yet sent now show it as Not verified.`:`Requirements saved. ${d.label.trim()} added as a nice-to-have.`);
+      toast(d.type==='must'?`Requirement saved. ${d.label.trim()} is a new must-have; candidates not yet sent now show it as Not verified.`:`Requirement saved. ${d.label.trim()} added as a nice-to-have.`);
       return; }
   }
 });
