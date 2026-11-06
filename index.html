@@ -1,0 +1,1275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recruiter Review Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --text:#101e2e; --muted:#536471; --surface:#fff; --bg:#fafaf9; --border:#e8e6e3; --border-strong:rgba(0,0,0,.15);
+  --accent:#151ded; --ok:#326953; --ok-bg:#ebffe7; --pend:#8a5a00; --pend-bg:#fcf3e1; --no:#a4262c; --no-bg:#fdf3f3; --info-bg:#f2f6fc;
+  --dark:#101e2e; --r:8px;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 Inter,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* app bar */
+.bar{background:var(--dark);color:#fff;padding:10px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.bar b{font-weight:700;letter-spacing:-.01em}
+.bar .ill{font-size:12px;color:#c0d6f0}
+main{max-width:1280px;margin:0 auto;padding:20px 24px 120px}
+
+/* generic */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.client{font-size:14px;color:var(--muted)} .client b{color:var(--text);font-size:15px}
+.eyebrow{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:24px;line-height:1.2;margin:2px 0 4px;letter-spacing:-.01em}
+h2{font-size:16px;margin:0 0 8px}
+.muted{color:var(--muted)} .small{font-size:12px}
+.mono{font-family:var(--mono);font-size:12px}
+.btn{border:1px solid var(--border-strong);background:#fff;border-radius:var(--r);padding:6px 12px;cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--text)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:#0e15c2}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:3px 9px;font-size:12px}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-size:inherit}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.discard-icon{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;padding:0;color:var(--muted)}
+.discard-icon:hover,.discard-icon:focus-visible{color:var(--no);border-color:var(--no)}
+.discard-icon{position:relative}
+.discard-icon:hover::after,.discard-icon:focus-visible::after{content:attr(data-tooltip);position:absolute;z-index:5;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);padding:4px 7px;border-radius:4px;background:var(--dark);color:#fff;font-size:11px;font-weight:500;white-space:nowrap;pointer-events:none}
+.discard-toggle{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:8px 0;font:inherit;font-weight:600;color:var(--text);cursor:pointer}
+.discard-toggle .chevron{display:inline-block;transition:transform .15s}
+.discard-toggle[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+.send-record{margin:12px 0 16px}
+.send-record-toggle{background:none;border:0;padding:0;display:inline-flex;align-items:center;gap:7px;color:var(--text);font:inherit;font-weight:700;cursor:pointer}
+.send-record-toggle .chevron{display:inline-block;transition:transform .15s}
+.send-record-toggle[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+.round-group{border:1px solid var(--border);border-radius:var(--r);background:var(--surface);margin-top:10px;overflow:hidden}
+.round-toggle{width:100%;display:flex;align-items:center;gap:10px;flex-wrap:wrap;text-align:left;border:0;background:var(--surface);padding:12px 16px;cursor:pointer}
+.round-toggle:hover{background:#f4f6f9}
+.round-toggle .chevron{display:inline-block;transition:transform .15s;color:var(--muted)}
+.round-toggle[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+.round-meta{color:var(--muted);font-size:12px}
+.round-body{border-top:1px solid var(--border)}
+.round-body th,.round-body td{padding-left:16px;padding-right:16px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:4px;padding:0;border:1px solid var(--border-strong);border-radius:50%;background:#fff;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;vertical-align:middle}
+.info-btn:hover{color:var(--accent);border-color:var(--accent)}
+.send-record-body{margin-top:12px;font-size:13px}
+.send-record-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.send-record-grid>div{border-top:1px solid var(--border);padding-top:10px}
+.send-record-grid h3{font-size:12px;margin:0 0 6px}
+@media (max-width:900px){.send-record-grid{grid-template-columns:1fr}}
+
+/* status */
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-meets{background:var(--ok-bg);color:var(--ok)} .b-confirm{background:var(--pend-bg);color:var(--pend)} .b-dont{background:var(--no-bg);color:var(--no)} .b-sent{background:#eef0f3;color:var(--muted)}
+.stage-chip{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:600;line-height:1.35;white-space:nowrap}
+.stage-review{background:#eef0f3;color:var(--text)}
+.stage-interviewing{background:var(--info-bg);color:var(--accent)}
+.stage-offer,.stage-hired{background:var(--ok-bg);color:var(--ok)}
+.stage-rejected{background:var(--no-bg);color:var(--no)}
+.t-ok{color:var(--ok)} .t-pend{color:var(--pend)} .t-no{color:var(--no)}
+.tag{display:inline-block;border:1px solid var(--border-strong);border-radius:999px;padding:0 7px;font-size:11px;color:var(--muted);font-weight:500;white-space:nowrap}
+.tag.new{border-color:var(--accent);color:var(--accent)}
+.done{font-size:13px;font-weight:600;color:var(--ok)}
+.tag.st{display:inline-flex;align-items:center;gap:4px;color:var(--text);vertical-align:1px}
+.tag.st svg{width:11px;height:11px}
+.mh{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+
+/* role header */
+.rolehead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.batchbox{text-align:right}
+.batchbox .why{font-size:12px;color:var(--muted);margin-top:4px;max-width:260px}
+.banner{background:var(--info-bg);border:1px solid #c0d6f0;border-radius:var(--r);padding:10px 12px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tiles{display:flex;align-items:center;flex-wrap:wrap;gap:8px 24px;padding:2px 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.tgroup{display:flex;align-items:center;gap:8px}
+.tgroup .glabel{font-size:13px;font-weight:600;color:var(--muted)}
+.tgroup .row{display:flex;gap:5px;flex-wrap:wrap}
+.tiles .clear-filter{white-space:nowrap;margin-left:auto}
+.tile{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);background:#fff;border-radius:var(--r);padding:6px 9px;text-align:left;cursor:pointer;font-size:12px;line-height:1.2;color:var(--text)}
+.tile:hover{border-color:var(--text)}
+.tile .n{font-size:11px;font-weight:600;color:var(--muted)}
+.tile .l{font-weight:600}
+.tile[aria-pressed="true"]{border-color:var(--dark);background:var(--dark);color:#fff;font-weight:700}
+.tile[aria-pressed="true"] .l,.tile[aria-pressed="true"] .n{color:#fff}
+.tile[data-k="status"][data-v="meets"][aria-pressed="true"]{border-color:var(--ok);background:var(--ok)}
+.tile[data-k="status"][data-v="confirm"][aria-pressed="true"]{border-color:var(--pend);background:var(--pend)}
+.tile[data-k="status"][data-v="dont"][aria-pressed="true"]{border-color:var(--no);background:var(--no)}
+tr.grp th{background:var(--bg);color:var(--text);font-size:12px;padding:6px 10px}
+tr.grp .link{font-weight:600;color:var(--text);text-decoration:none}
+.nice{margin-top:12px}
+.nice summary{cursor:pointer;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:4px 0}
+.seg{display:inline-flex;border:1px solid var(--border-strong);border-radius:var(--r);overflow:hidden}
+.seg button{border:0;background:#fff;padding:5px 12px;cursor:pointer;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--dark);color:#fff}
+.secthead{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:4px 0 10px}
+.secthead h2.sect{margin:0}
+.tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:0 1 680px;justify-content:flex-end}
+.sbox{position:relative;flex:1 1 360px;min-width:220px}
+.sbox .lupa{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.sbox input[type=text]{width:100%;padding:6px 30px 6px 32px;font-size:13px}
+.sclear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:17px;line-height:1;cursor:pointer}
+.sclear:hover{background:#eef0f3;color:var(--text)}
+.scount{font-size:13px;font-weight:400;white-space:nowrap}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+
+/* tables */
+.tw{overflow-x:auto;position:relative}
+table.matrix th.req{white-space:normal;min-width:84px;vertical-align:bottom;line-height:1.25}
+table.matrix th.group-head{padding-top:8px;padding-bottom:6px;background:var(--bg);color:var(--text);font-size:12px;text-align:left}
+table.matrix th.group-head .link{font-weight:600;text-decoration:none;color:var(--text)}
+table.matrix th.group-head .link:hover{text-decoration:underline}
+table.matrix thead tr.req-head th{padding-top:6px;padding-bottom:8px}
+.tw .legend{position:sticky;left:0}
+table.matrix .stick-l{position:sticky;left:0;z-index:1;background:var(--surface);min-width:120px}
+table.matrix .stick-r{position:sticky;right:0;z-index:1;background:var(--surface);box-shadow:-6px 0 8px -6px rgba(16,30,46,.2)}
+table.matrix .matrix-status{right:226px;min-width:112px}
+table.matrix .matrix-action{position:sticky;right:26px;z-index:1;background:var(--surface);min-width:200px;width:200px}
+table.matrix .matrix-open{position:sticky;right:0;z-index:1;background:var(--surface);min-width:26px;width:26px}
+table.matrix tbody tr:hover .matrix-status,table.matrix tbody tr:hover .matrix-action,table.matrix tbody tr:hover .matrix-open{background:#f4f6f9}
+table.matrix tbody .stick-l{box-shadow:6px 0 8px -6px rgba(16,30,46,.2)}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--border)}
+th{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+tr.sentrow td{color:var(--muted)}
+tr.outrow td{background:#fafbfc;color:var(--muted)}
+tr.outrow .cname{color:var(--muted)}
+h2.sect{font-size:15px;margin:4px 0 10px}
+h2.sect .small{font-weight:400}
+td.chev{color:var(--muted);font-size:20px;line-height:1;padding-left:0;padding-right:4px;width:16px}
+tr.crow:hover td.chev{color:var(--accent)}
+tr.crow{cursor:pointer} tr.crow:hover td{background:#f4f6f9}
+.crow .badge{padding-top:0;padding-bottom:0;line-height:1.4}
+.cname{background:none;border:0;padding:0;font-weight:700;cursor:pointer;color:var(--text);text-align:left}
+.cname:hover{color:var(--accent);text-decoration:underline}
+.matrix .hunterline{font-weight:400;margin-top:2px}
+.pending{display:block;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.cell{text-align:center;font-weight:700;font-size:15px}
+.cell.newcol{background:#f7f7ff}
+th.newcol{background:#f7f7ff}
+.nicefirst{border-left:2px solid var(--border-strong)}
+.legend{font-size:12px;color:var(--muted);margin-top:8px}
+
+/* candidate */
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+.cgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);grid-template-areas:"req src";gap:16px;align-items:stretch}
+.cgrid.fit{grid-template-rows:minmax(0,1fr)}
+.cgrid.fit .reqpane,.cgrid.fit .srcpane{overflow:auto;overscroll-behavior:contain}
+.reqpane{grid-area:req} .srcpane{grid-area:src;display:flex;flex-direction:column;gap:12px;border-radius:var(--r)}
+.source-tabs{display:flex;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);position:sticky;top:0;z-index:3}
+.source-tabs button{flex:1;border:0;border-radius:5px;background:transparent;padding:8px 5px;color:var(--muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.source-tabs button[aria-selected="true"]{background:var(--accent);color:#fff}
+.source-tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.srcpane [role="tabpanel"][hidden]{display:none}
+.srcpane .scr h2{font-size:13px;margin-bottom:6px}
+.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 3px rgba(0,0,0,0)}}
+.reqrow{border-bottom:1px solid var(--border);padding:10px 0}
+.reqrow:last-child{border-bottom:0}
+.reqtop{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.states{display:inline-flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden}
+.states button{border:0;border-left:1px solid var(--border);background:#fff;padding:3px 8px;cursor:pointer;font-size:12px;font-weight:600}
+.states button:first-child{border-left:0}
+.states button[aria-pressed="true"].s-v{background:var(--ok-bg);color:var(--ok)}
+.states button[aria-pressed="true"].s-u,.states button[aria-pressed="true"].s-c{background:var(--pend-bg);color:var(--pend)}
+.states button[aria-pressed="true"].s-x{background:var(--no-bg);color:var(--no)}
+.states button[aria-pressed="true"].s-na{background:#eef0f3}
+.reqrow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;column-gap:8px;align-items:start}
+.reqrow:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.sico{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-top:1px;border:1.5px solid currentColor;border-radius:50%;font-size:11px;font-weight:700;line-height:1}
+.sword{font-weight:600}
+.sechead{font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:4px 0}
+.rctl{position:relative;display:flex;align-items:center;gap:2px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:0;border-radius:6px;background:none;color:var(--muted);cursor:pointer}
+.iconbtn:hover{background:#eef0f3;color:var(--text)}
+.menu{position:absolute;right:0;top:calc(100% + 4px);z-index:5;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r);box-shadow:0 6px 18px rgba(16,30,46,.18);padding:4px;display:flex;flex-direction:column;min-width:150px}
+.menu button{border:0;background:none;text-align:left;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600}
+.menu button:hover,.menu button:focus{background:#eef0f3}
+.srcchip{background:none;border:1px solid var(--border-strong);border-radius:999px;padding:0 8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--accent);vertical-align:1px}
+.srclbl{color:var(--text);font-weight:500}
+.srclink{background:none;border:0;padding:0;font:inherit;font-weight:500;color:var(--text);cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+.srclink:hover{color:var(--accent)}
+.srcsel{width:auto;font-size:12px;padding:1px 4px;margin-left:4px;color:var(--muted)}
+.msep{height:1px;background:var(--border);margin:4px 2px}
+.redit{grid-column:2 / 4;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.ev{font-size:12px;color:var(--muted);margin-top:4px}
+.where{display:inline-flex;align-items:center;gap:4px;margin-top:4px;font-size:12px}
+.where button{background:none;border:1px solid var(--border-strong);border-radius:999px;padding:1px 8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--accent)}
+.chead{background:var(--bg);display:flex;justify-content:space-between;align-items:flex-start;gap:12px 24px;flex-wrap:wrap;padding:8px 0 12px;margin-bottom:12px;border-bottom:1px solid var(--border)}
+.decision{display:flex;flex-direction:column;align-items:flex-end;gap:6px;text-align:right;max-width:560px}
+.decision .dstate{font-size:14px}
+.dlabel{display:inline-flex;align-items:center;gap:5px}
+td .dlabel{font-size:13px}
+.dnote{max-width:520px}
+.btn.ib{display:inline-flex;align-items:center;gap:6px}
+.dstrip{margin-bottom:12px;border-color:var(--accent)}
+.dstrip h2{margin-bottom:8px}
+.dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.dstate{font-size:14px}
+.dacts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.dform{margin-top:10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.dform label{display:block;font-size:13px;margin:3px 0}
+.datefield{position:relative}
+.datefield input{color:transparent;cursor:pointer}
+.datefield input::-webkit-datetime-edit{opacity:0}
+.link.quiet{color:var(--muted);font-size:12px;text-align:left;text-decoration-color:rgba(83,100,113,.4)}
+.link.quiet:hover{color:var(--text)}
+.datefield .dateshow{position:absolute;left:9px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text)}
+textarea,input[type=text],input[type=date],select{width:100%;border:1px solid var(--border-strong);border-radius:6px;padding:6px 8px;background:#fff}
+textarea{min-height:60px}
+[aria-invalid="true"]{border-color:var(--no)!important}
+.err{color:var(--no);font-size:12px;font-weight:600;margin-top:4px}
+.help{font-size:12px;color:var(--muted);margin:2px 0 6px}
+.locked{background:#eef0f3;border-radius:var(--r);padding:10px;font-size:13px}
+
+/* sources */
+.rshead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.rshead h2{margin:0}
+.cvdoc{position:relative;background:#e9ecf0;border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.cvdoc.collapsed{max-height:230px;overflow:hidden}
+.cvdoc.collapsed::after{content:'';position:absolute;left:0;right:0;bottom:0;height:64px;background:linear-gradient(rgba(233,236,240,0),#e9ecf0)}
+.cvmore{margin-top:8px}
+.cvpage{background:#fff;box-shadow:0 1px 3px rgba(16,30,46,.18);padding:22px 24px;font-size:12px;line-height:1.45;color:#1d2733}
+.cvname{font-size:18px;font-weight:700;letter-spacing:.01em}
+.cvtitle{font-size:13px;color:#3a4756;margin-top:1px}
+.cvmeta{font-size:11px;color:#5b6876;margin-top:4px}
+.cvh{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#3a4756;border-bottom:1px solid #d5dbe2;padding-bottom:2px;margin:14px 0 6px}
+.cvpage p{margin:0}
+.cvjob{margin-bottom:8px}
+.cvjt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.cvjt .cvd{color:#5b6876;font-size:11px}
+.cvpage ul{margin:3px 0 0;padding-left:16px}
+.cvpage li{margin:1px 0}
+.trx summary{cursor:pointer;font-size:13px}
+.tlines{list-style:none;margin:10px 0 0;padding:0;font-size:12.5px;line-height:1.45}
+.tlines li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:5px 6px;border-radius:4px}
+.tlines li.on{background:var(--info-bg)}
+.tl{background:none;border:0;padding:0;font-family:var(--mono);font-size:11px;color:var(--accent);cursor:pointer;text-align:left;align-self:start;margin-top:2px}
+.player{background:var(--dark);color:#cfd5e0;border-radius:6px;padding:12px}
+.player .now{font-family:var(--mono);font-size:12px;margin-bottom:10px}
+.timeline{position:relative;height:30px;margin:18px 6px 14px}
+.timeline .track{position:absolute;top:13px;left:0;right:0;height:4px;background:#344558;border-radius:2px}
+.timeline .head{position:absolute;top:8px;width:2px;height:14px;background:#fff}
+.mark{position:absolute;top:5px;transform:translateX(-50%);background:#fff;color:var(--dark);border:0;border-radius:4px;font-size:10px;font-weight:700;padding:2px 5px;cursor:pointer;white-space:nowrap}
+.mark.on{background:var(--accent);color:#fff}
+.mark.up{top:-16px}
+.mark.up small{top:-14px}
+.mark small{display:block;position:absolute;top:22px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-weight:400;color:#c0d6f0;background:none}
+.srcstate{border:1px dashed var(--border-strong);border-radius:6px;padding:12px;font-size:13px}
+
+/* send */
+.sendbar{background:var(--dark);color:#fff;border-radius:var(--r);padding:12px 14px;margin-bottom:14px;position:sticky;top:0;z-index:2}
+.step{margin-bottom:14px}
+.stepper{list-style:none;margin:16px 0;padding:0;display:flex;gap:8px;max-width:640px}
+.stepper li{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);min-width:0}
+.stepper li:not(:last-child){flex:1}
+.stepper li:not(:last-child)::after{content:"";flex:1;height:2px;min-width:12px;background:var(--border);border-radius:1px}
+.stepper li.done::after{background:var(--ok)}
+.stepper .dot{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;border:2px solid var(--muted);background:var(--surface);color:var(--muted)}
+.stepper .lbl{white-space:nowrap}
+.stepper .cur{color:var(--text);font-weight:700}
+.stepper .cur .dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.stepper .done{color:var(--text)}
+.stepper .done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.s1head,.s1body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.s1head{margin-top:12px;padding-bottom:8px}
+.s1head > div{padding:0 12px}
+.s1head h3{font-size:14px;margin:0 0 2px}
+.s1head p{margin:0}
+.s1rows{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.s1row{border:1px solid var(--border);border-radius:var(--r);background:var(--surface)}
+.s1top{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.s1top:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.pvcell,.ckcell{padding:10px 12px;display:grid;gap:4px;align-content:start;justify-items:start}
+.ckcell{background:var(--bg);border-left:1px solid var(--border);border-bottom-right-radius:var(--r)}
+.ckreqs .reqrow{border:0;padding:4px 0}
+.cknote{margin-top:4px}
+.cell-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ckhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ckreqs{width:100%}
+.ckreqs .reqrow{padding:8px 0}
+.notebox{width:100%;box-sizing:border-box;border:1px solid var(--border);border-left:3px solid var(--muted);border-radius:var(--r);background:var(--bg);padding:8px 12px;display:grid;gap:4px;justify-items:start;margin-top:4px;font-size:13px}
+.notebox.need{background:var(--pend-bg);border-color:#e9c46a;border-left-color:var(--pend)}
+.notebox.need > b{color:var(--pend)}
+.small-btn{font-size:13px;padding:4px 10px;margin-top:4px}
+.pending-line{margin:16px 0 0;padding-top:12px;border-top:1px solid var(--border)}
+.s2lead{margin:0 0 12px}
+.s2steps{margin:0;padding:0;list-style:none;counter-reset:s2;display:grid;gap:16px;max-width:720px}
+.s2steps > li{counter-increment:s2;position:relative;padding-left:32px;display:grid;gap:6px;justify-items:start}
+.s2steps > li::before{content:counter(s2);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted);color:var(--muted);display:grid;place-items:center;font-size:12px;font-weight:700}
+.s2steps .fields{width:100%}
+.s1foot{margin-top:16px;align-items:center;gap:12px}
+@media (max-width:760px){.s1head{display:none}.s1body{grid-template-columns:1fr}.ckcell{border-left:0;border-top:1px solid var(--border);border-radius:0 0 var(--r) var(--r)}.cell-lbl{position:static;width:auto;height:auto;overflow:visible;clip:auto}.s1rows{margin-top:12px}}
+.warn{background:var(--pend-bg);border:1px solid #e9c46a;border-radius:var(--r);padding:10px 12px;margin:12px 0;font-size:13px}
+.fields{display:grid;grid-template-columns:160px 1fr;gap:8px 12px;align-items:center;max-width:720px}
+
+/* dialog */
+dialog{border:0;border-radius:12px;padding:0;max-width:560px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(16,30,46,.3)}
+dialog::backdrop{background:rgba(16,30,46,.45)}
+.dlg{padding:20px}
+.dlg h2{font-size:18px}
+.sumlist{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:12px 0;padding:12px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);font-size:14px}
+.sumlist dt{color:var(--muted)}
+.sumlist dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.dlg .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.reqlist{margin:0 0 12px;padding:0;list-style:none;font-size:13px}
+.reqlist li{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:5px 0;gap:8px}
+
+/* toast + try */
+.toast{position:fixed;right:24px;bottom:20px;max-width:520px;background:var(--dark);color:#fff;border-radius:var(--r);padding:12px 40px 12px 14px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:20}
+.tacts{display:flex;align-items:center;gap:14px;margin-top:10px}
+.tbtn{background:#fff;color:var(--dark);border:0;border-radius:6px;padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer}
+.tbtn:hover{background:#e6ebf2}
+.tlink{background:none;border:0;padding:0;color:#9ec1ff;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:13px}
+@media (max-width:1099px){.toast{right:auto;left:16px;max-width:calc(100vw - 312px)}} /* keeps clear of the side block, bottom right */
+.toast .x{position:absolute;right:8px;top:6px;background:none;border:0;color:#c0d6f0;cursor:pointer;font-size:16px}
+.toast .k{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#c0d6f0;margin-bottom:2px}
+/* "Try this": checklist panel on the right, same look as the top bar; visible in every view */
+.side{position:fixed;right:12px;top:16px;z-index:40;width:264px;max-height:calc(100vh - 32px);overflow:auto;background:var(--dark);color:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px}
+.side-hd{padding:12px 14px 10px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid rgba(192,214,240,.25)}
+.side-hd b{font-weight:700;letter-spacing:-.01em;font-size:14px}
+.side-hd .ill{font-size:12px;color:#c0d6f0}
+.try summary{cursor:pointer;list-style:none;padding:10px 14px;display:flex;align-items:flex-start;gap:8px}
+.try summary::-webkit-details-marker{display:none}
+.try summary .ttl{flex:1;display:flex;flex-direction:column;gap:2px}
+.try summary b{font-weight:700;letter-spacing:-.01em}
+.try summary .ill{font-size:12px;color:#c0d6f0}
+.try summary .car{color:#c0d6f0;transition:transform .15s}
+.try:not([open]) summary .car{transform:rotate(180deg)}
+.try .in{padding:2px 14px 12px}
+.try ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.try li{display:grid;grid-template-columns:16px 1fr;gap:9px;line-height:1.35}
+.try li .ck{width:16px;height:16px;margin-top:1px;border:1.5px solid #c0d6f0;border-radius:4px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.try li.done .ck{background:var(--ok);border-color:var(--ok)}
+.try li.done .tx{text-decoration:line-through;color:#c0d6f0}
+.try .foot{display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid rgba(192,214,240,.25)}
+.try .foot .muted{color:#c0d6f0}
+.try .foot .btn{color:var(--text)}
+@media(max-width:1099px){ .side{top:auto;bottom:16px} main{padding-bottom:200px} }
+.nexttask{display:none}
+@media(max-width:1099px){ .try:not([open]) .nexttask:not(:empty){display:block;margin-top:6px;font-size:13px;line-height:1.35;color:#fff} .nexttask .nxl{color:#c0d6f0;font-weight:600} }
+@media(max-width:760px){ .side{left:12px;right:12px;width:auto;bottom:12px} .side-hd{padding:8px 14px} .side-hd b{display:none} .try summary{padding:8px 14px} }
+/* open panel: content up to 1040px (filter row needs 951), centered in the space left of the panel (264px + 12px edge, minus main's own 24px padding) */
+@media(min-width:1100px){ main{max-width:min(1088px, calc(100vw - 268px));margin-left:max(0px, calc((100vw - 268px - 1088px) / 2));margin-right:auto} }
+
+@media (max-width:900px){
+  .cgrid{grid-template-columns:1fr;grid-template-areas:"req" "src"}
+  .srcpane{position:static;max-height:none;overflow:visible}
+  .decision{align-items:flex-start;text-align:left}
+  .dacts{justify-content:flex-start}
+  main{padding:16px 16px 160px}
+  .try ol{grid-template-columns:1fr}
+  .fields{grid-template-columns:1fr}
+  .batchbox{text-align:left}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<aside class="side" aria-label="About this prototype">
+<div class="side-hd"><b>Recruiter workspace</b><span class="ill">Illustrative prototype · All names and data are fictional.</span></div>
+<details class="try" id="try" open>
+  <summary><span class="ttl"><b>Try this</b><span class="ill"><span id="tryCount">7 tasks</span> · about 5 minutes</span><span class="nexttask" id="tryNext"></span></span><span class="car" aria-hidden="true">▾</span></summary>
+  <div class="in"><ol id="tryList">
+    <li data-t="1"><span class="ck" aria-hidden="true"></span><span class="tx">Filter by <b>To confirm</b> to see which candidates still need a check before sending.</span></li>
+    <li data-t="2"><span class="ck" aria-hidden="true"></span><span class="tx">Open Bruno M. and resolve the <b>5+ years backend</b> conflict: mark it as <b>Meets</b> or <b>Doesn't meet</b>.</span></li>
+    <li data-t="7"><span class="ck" aria-hidden="true"></span><span class="tx">Ana R. meets every must-have. Click <b>Add to batch</b> on that row.</span></li>
+    <li data-t="3"><span class="ck" aria-hidden="true"></span><span class="tx">Open Diego S., click <b>Add to batch</b> and add a note on why to send now.</span></li>
+    <li data-t="4"><span class="ck" aria-hidden="true"></span><span class="tx">The client asked for fintech experience. Click <b>Add requirement</b>, add it as a must-have and see what changes.</span></li>
+    <li data-t="5"><span class="ck" aria-hidden="true"></span><span class="tx">On Carla T.'s row, click <b>Or add a note to send it anyway</b> and update the note.</span></li>
+    <li data-t="6"><span class="ck" aria-hidden="true"></span><span class="tx">Click <b>View batch</b>, add any note it asks for, click <b>Next</b> and finish with <b>Mark as sent</b>.</span></li>
+  </ol>
+  <div class="foot"><button class="btn sm" data-act="reset" aria-describedby="resetHelp">Reset demo</button><span class="small muted" id="resetHelp">Back to the starting data.</span></div></div>
+</details>
+</aside>
+<main id="app"></main>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<div id="toast"></div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"></dialog>
+
+<script>
+/* ---------- data (fictional) ---------- */
+const REQS0 = [
+  {id:'en',  label:'English C1',        type:'must', from:'Kickoff'},
+  {id:'yrs', label:'5+ years backend',  type:'must', from:'Kickoff'},
+  {id:'bud', label:'Budget ≤ $5k/month', type:'must', from:'Kickoff'},
+  {id:'node',label:'Node.js',           type:'must', from:'Kickoff'},
+  {id:'aws', label:'AWS',               type:'nice', from:'Kickoff'},
+  {id:'pg',  label:'PostgreSQL',        type:'nice', from:'Kickoff'},
+  {id:'ms',  label:'Microservices',     type:'nice', from:'Kickoff'}
+];
+/* Illustrative resumes. Fictional people and companies; content matches the evidence above (e.g. Diego's has no English or PostgreSQL). */
+const T0 = Date.now();
+/* Illustrative transcripts. Only some sources provide one (Fathom: yes; Hireflix: not confirmed). Lines match the evidence marks. */
+const TR = {
+ ana:{src:'Fathom',lines:[[15,'Hunter','Thanks for joining, Ana. Can you walk me through your current role?'],[40,'Ana','Sure. I am a backend engineer at PayFlow, a payments company. I have been there since 2019.'],[130,'Ana','Most of my day is designing services for card settlement. I explain trade-offs to product a lot, so English is part of my daily work.'],[300,'Hunter','How long have you been doing backend overall?'],[312,'Ana','Since 2016, so about ten years, always on the server side.'],[525,'Ana','Let me share my screen. This is a Node.js service in TypeScript, here is how we consume the SQS queue.'],[860,'Ana','We split the monolith by domain: settlement, refunds and disputes each own their data and talk through events.'],[1150,'Hunter','Salary expectations?'],[1158,'Ana','Around four and a half thousand a month.']]},
+ carla:{src:'Fathom',lines:[[20,'Hunter','Hi Carla, tell me about your team at Rutas.'],[100,'Carla','I lead three engineers on the route-planning API. We work with clients in the US, so all our meetings are in English.'],[400,'Carla','We use NestJS on top of Node.js, PostgreSQL for shipments, and everything runs on AWS.'],[700,'Hunter','What are your salary expectations?'],[710,'Carla','I am looking for around $5.8k a month.'],[900,'Hunter','Any questions for me?'],[905,'Carla','Yes, what does the on-call look like for this job opening?']]},
+ bruno:{src:'Fathom',lines:[[30,'Hunter','Hi Bruno, how are you?'],[185,'Bruno','I work in English with our partners in Miami every week, so I am comfortable with it.'],[260,'Hunter','How many years in backend?'],[268,'Bruno','About four years as a backend engineer. Before that I was in QA at the same company, but I was already writing API tests.'],[570,'Bruno','Here is the Express API for loan applications. This middleware validates the request before it hits the service.'],[690,'Bruno','We are moving the scoring part to its own service, so each piece can scale on its own.']]},
+ elena:{src:'Fathom',lines:[[50,'Hunter','Hi Elena, tell me about your work at Viajes Sur.'],[300,'Elena','At Viajes Sur I built the booking pipeline on Kafka.'],[760,'Hunter','What are you expecting in terms of salary?'],[765,'Elena','I am looking for around six thousand dollars a month.'],[900,'Hunter','Great, thanks Elena.']]},
+};
+const CV = {
+ ana:{title:'Senior Backend Engineer',loc:'Montevideo, Uruguay',mail:'ana.r@example.com',
+  summary:'Backend engineer with 10 years building payment and e-commerce platforms. I design Node.js services that handle money movement, with a focus on reliability, observability and clean service boundaries.',
+  jobs:[{r:'Backend Engineer',co:'PayFlow (payments)',d:'Mar 2019 - Present',b:['Designed and maintain the card-settlement service (Node.js, TypeScript) processing ~2M transactions a month.','Split a monolith into 6 microservices with event-driven communication over AWS SQS.','Moved batch reconciliation to AWS Lambda, cutting nightly run time from 3h to 25 min.','Mentor 2 junior engineers; lead the on-call rotation for the payments team.']},
+        {r:'Software Engineer',co:'Tiendita',d:'Feb 2016 - Feb 2019',b:['Built the order and inventory APIs for an online store with 40k monthly orders (Node.js, PostgreSQL).','Introduced integration tests and CI, reducing production incidents by half.','Worked with the mobile team on the checkout API.']}],
+  skills:['Node.js','TypeScript','PostgreSQL','AWS (Lambda, SQS, RDS)','Microservices','Docker','Jest'],
+  edu:'B.S. Computer Engineering · Universidad Ilustrativa · 2011 - 2016',langs:'Spanish (native) · English (advanced)'},
+ carla:{title:'Senior Backend Developer',loc:'Córdoba, Argentina',mail:'carla.t@example.com',
+  summary:'Backend developer with 11 years of experience, the last 8 in logistics. Comfortable owning a service end to end and leading small teams.',
+  jobs:[{r:'Senior Backend Developer',co:'Rutas',d:'Jan 2018 - Present',b:['Lead a team of 3 engineers building the route-planning API (Node.js, NestJS).','Designed the PostgreSQL schema for shipments and tracking events.','Containerized services with Docker and moved them to AWS ECS.']},
+        {r:'Developer',co:'Agencia Norte',d:'Mar 2015 - Dec 2017',b:['Built web backends for agency clients in PHP and later Node.js.','Integrated third-party payment and shipping APIs.']}],
+  skills:['Node.js','NestJS','PostgreSQL','AWS','Docker','REST APIs'],
+  edu:'Systems Analyst · Instituto Técnico Ilustrativo · 2011 - 2014',langs:'Spanish (native) · English (C1)'},
+ bruno:{title:'Backend Engineer',loc:'Rosario, Argentina',mail:'bruno.m@example.com',
+  summary:'Backend engineer in lending. Started in QA, which shapes how I write and test services. Interested in APIs with real traffic and clear contracts.',
+  jobs:[{r:'Backend Engineer',co:'Lendo (lending)',d:'Jun 2020 - Present',b:['Build the loan-application API with Node.js and Express.','Added Redis caching to the credit-score lookup, cutting p95 latency by 60%.','Own the PostgreSQL migrations for the loans domain.']},
+        {r:'QA Engineer',co:'Lendo',d:'Apr 2018 - May 2020',b:['Automated API regression tests and set up the first contract tests.','Worked closely with backend engineers on test data and environments.']}],
+  skills:['Node.js','Express','PostgreSQL','Redis','Jest','Postman'],
+  edu:'Systems Engineering (in progress) · Universidad Ilustrativa',langs:'Spanish (native) · English (fluent)'},
+ diego:{title:'Backend Engineer',loc:'Bogotá, Colombia',mail:'diego.s@example.com',
+  summary:'Backend engineer with 9 years in fintech. I build high-throughput Node.js services and like owning the infrastructure they run on.',
+  jobs:[{r:'Backend Engineer',co:'Cuota',d:'Aug 2017 - Present',b:['Built the installment-plan engine as a set of microservices (Node.js, Fastify).','Store plan and payment data in MongoDB; designed indexes for the reporting queries.','Run services on AWS (ECS, S3, CloudWatch) and maintain the Terraform setup.','Reduced API response time by 40% by moving hot paths to Fastify.']}],
+  skills:['Node.js','Fastify','MongoDB','AWS','Microservices','Terraform'],
+  edu:'B.S. Systems Engineering · Universidad Ilustrativa · 2012 - 2017',langs:''},
+ elena:{title:'Backend Engineer',loc:'Lima, Peru',mail:'elena.v@example.com',
+  summary:'Backend engineer focused on travel and booking systems. 10 years with Node.js, from freelance projects to event-driven platforms.',
+  jobs:[{r:'Backend Engineer',co:'Viajes Sur',d:'May 2019 - Present',b:['Built the booking pipeline on Kafka, handling peaks of 3k events per second.','Maintain the pricing service in Node.js and TypeScript with PostgreSQL.','Deployed services on AWS (EKS, RDS).']},
+        {r:'Developer',co:'Freelance',d:'Jan 2016 - Apr 2019',b:['Delivered Node.js backends for 10+ small businesses (booking, e-commerce, internal tools).']}],
+  skills:['Node.js','TypeScript','PostgreSQL','AWS','Kafka'],
+  edu:'B.S. Software Engineering · Universidad Ilustrativa · 2011 - 2015',langs:'Spanish (native)'},
+ facundo:{title:'Backend Developer',loc:'Asunción, Paraguay',mail:'facundo.l@example.com',
+  summary:'Java backend developer with 8 years in banking. Experienced with Spring Boot services and large Oracle databases.',
+  jobs:[{r:'Backend Developer',co:'Banco Ilustrativo',d:'Jul 2018 - Present',b:['Build account and transfer services with Java 17 and Spring Boot.','Split the transfers module into microservices with Spring Cloud.','Tune Oracle queries for month-end batch processes.']}],
+  skills:['Java','Spring Boot','Spring Cloud','Oracle','Microservices'],
+  edu:'B.S. Computer Science · Universidad Ilustrativa · 2013 - 2018',langs:'Spanish (native) · English (advanced)'},
+ gabriela:{title:'Backend Engineer',loc:'Santiago, Chile',mail:'gabriela.p@example.com',
+  summary:'Backend engineer in e-commerce. I like turning messy business rules into simple, well-tested services.',
+  jobs:[{r:'Backend Engineer',co:'Mercadito',d:'Mar 2021 - Present',b:['Build the promotions and coupons service (Node.js, PostgreSQL).','Migrated cron jobs to Cloud Run and Pub/Sub on GCP.','Wrote the team guide for API versioning.']},
+        {r:'Junior Developer',co:'Estudio Uno',d:'Jan 2019 - Feb 2021',b:['Built internal tools and REST APIs in Node.js.','Maintained client websites and their CMS integrations.']}],
+  skills:['Node.js','PostgreSQL','GCP','REST APIs'],
+  edu:'B.S. Computer Engineering · Universidad Ilustrativa · 2014 - 2019',langs:'Spanish (native) · English (B2)'},
+ lucas:{title:'Backend Engineer',loc:'Medellín, Colombia',mail:'lucas@example.com',summary:'Backend engineer with 6+ years building Node.js services.',jobs:[{r:'Backend Engineer',co:'ShopNow (e-commerce)',d:'Jan 2019 - Present',b:['Built catalog and checkout APIs in Node.js and PostgreSQL.', 'Moved image processing to AWS Lambda.']}],skills:['Node.js', 'PostgreSQL', 'AWS', 'Microservices'],edu:'B.S. Computer Engineering · Universidad Ilustrativa',langs:'Spanish (native) · English (C1)'},
+ sofia:{title:'Senior Backend Engineer',loc:'Buenos Aires, Argentina',mail:'sofia@example.com',summary:'Backend engineer with 6+ years building Node.js services.',jobs:[{r:'Senior Backend Engineer',co:'Nimbus Health',d:'Mar 2018 - Present',b:['Led the migration of 12 services to AWS (ECS, RDS).', 'Owns the patient-scheduling API in Node.js.']}],skills:['Node.js', 'TypeScript', 'PostgreSQL', 'AWS', 'Microservices'],edu:'B.S. Computer Engineering · Universidad Ilustrativa',langs:'Spanish (native) · English (C1)'},
+ tomas:{title:'Backend Engineer',loc:'Quito, Ecuador',mail:'tomas@example.com',summary:'Backend engineer with 6+ years building Node.js services.',jobs:[{r:'Backend Engineer',co:'Ruta Logistics',d:'Jun 2019 - Present',b:['Designs event-driven services for shipment tracking.', 'Side project: open-source payments SDK for Node.js.']}],skills:['Node.js', 'PostgreSQL', 'AWS', 'Kafka'],edu:'B.S. Computer Engineering · Universidad Ilustrativa',langs:'Spanish (native) · English (C1)'},
+ julia:{title:'Backend Engineer',loc:'Montevideo, Uruguay',mail:'julia@example.com',summary:'Backend engineer with 6+ years building Node.js services.',jobs:[{r:'Backend Engineer',co:'Pagos Ya',d:'Feb 2020 - Present',b:['Builds the merchant-onboarding API (Node.js, PostgreSQL).', 'Integrated two card processors.']}],skills:['Node.js', 'PostgreSQL', 'AWS', 'Microservices'],edu:'B.S. Computer Engineering · Universidad Ilustrativa',langs:'Spanish (native) · English (C1)'},
+};
+const E = (s,ev,src,t)=>({s,ev:ev||'',where:src?{src,t:t||null}:null});
+const ELIG_OK = E('v','Available in 2 weeks, own equipment, contractor OK, no other processes.','note');
+const STAGE={review:'In client review',interviewing:'Interviewing',offer:'Offer',hired:'Hired',rejected:'Client rejected'};
+const STAGE_ORDER=['hired','offer','interviewing','review','rejected'];
+const stageOf=c=>{const b=S.sent.find(x=>x.items.some(i=>i.name===c.name));return (b&&b.stage||{})[c.name]||{k:'review'};};
+const STAGE_CLS={review:'muted',interviewing:'',offer:'t-ok',hired:'t-ok',rejected:'t-no'};
+const R1 = (name,file)=>({name,file,screen:true,internal:'4/4 must-haves and eligibility met.',note:''});
+const SENT_R1_TS = T0-14*86400e3-3*3600e3;
+const SENT0 = ()=>[{round:1,date:'Oct 22',time:'11:05',ts:SENT_R1_TS,channel:'Email',recipients:'hiring@acme.example, cto@acme.example',
+  items:[R1('Lucas F.','LucasF_resume.pdf'),R1('Sofía K.','SofiaK_resume.pdf'),R1('Tomás B.','TomasB_resume.pdf'),R1('Julia N.','JuliaN_resume.pdf')],
+  stage:{'Lucas F.':{k:'rejected',said:'No fintech or payments background.'},'Sofía K.':{k:'offer',said:'Great culture fit; offer sent Nov 3.'},'Tomás B.':{k:'interviewing',said:'Technical interview on Nov 7.'},'Julia N.':{k:'review'}}}];
+const SENTC = (id,name,hunter,file,note)=>({id,rcv:16*24,name,hunter,file,dur:1000,screen:'ok',note,sentAt:'Oct 22',sentTs:SENT_R1_TS,
+  r:{en:E('v','Fluent.','screening',120),yrs:E('v','Backend for 6+ years.','resume'),bud:E('v','Within budget.','note'),node:E('v','Node.js in resume.','resume'),aws:E('v','','resume'),pg:E('v','','resume'),ms:E('v','','resume'),elig:ELIG_OK},
+  decision:{v:'present',note:''}});
+const CANDS0 = [
+ {id:'ana',rcv:50,name:'Ana R.',hunter:'Hunter 1',file:'AnaR_resume.pdf',dur:1265,screen:'ok',
+  resume:[['Backend Engineer · PayFlow (payments)','2019 - now'],['Software Engineer · Tiendita','2016 - 2019']],skills:'Node.js, TypeScript, PostgreSQL, AWS (Lambda, SQS), microservices',
+  note:'Strong payments background. Expects $4.5k/month. Available in 2 weeks. Own equipment.',
+  r:{en:E('v','Fluent, clear technical explanations.','screening',130),yrs:E('v','Backend since 2016 (10 years).','resume'),bud:E('v','Expects $4.5k/month.','note'),node:E('v','Node.js in resume and live walkthrough.','screening',525),aws:E('v','','resume'),pg:E('v','','resume'),ms:E('v','Explains service boundaries.','screening',860),elig:ELIG_OK},
+  decision:{v:'none'}},
+ {id:'carla',rcv:27,name:'Carla T.',hunter:'Hunter 2',file:'CarlaT_resume.pdf',dur:1100,screen:'ok',
+  resume:[['Senior Backend Developer · Rutas','2018 - now'],['Developer · Agencia Norte','2015 - 2018']],skills:'Node.js, NestJS, PostgreSQL, AWS, Docker',
+  note:'Great communicator, but English is B2. Led a team of 3. Expects $4.8k/month. Available now.',
+  r:{en:E('c','Resume: English C1. Hunter note: English B2.'),yrs:E('v','Backend since 2018 (8 years).','resume'),bud:E('c','Hunter note: expects $4.8k/month. Screening 11:50: says around $5.8k.'),node:E('v','NestJS in resume.','resume'),aws:E('v','','resume'),pg:E('v','','resume'),ms:E('u',''),elig:ELIG_OK},
+  decision:{v:'present',note:'English level and salary expectations conflict across sources; confirm both before sending.'}},
+ {id:'bruno',rcv:26,name:'Bruno M.',hunter:'Hunter 2',file:'BrunoM_resume.pdf',dur:1120,screen:'ok',
+  resume:[['Backend Engineer · Lendo (lending)','2020 - now'],['QA Engineer · Lendo','2018 - 2020']],skills:'Node.js, Express, PostgreSQL, Redis',
+  note:'4 years in backend, before that QA. Fluent English. Available in 2 weeks. Expects $4k/month.',
+  r:{en:E('v','Fluent.','screening',185),yrs:E('c','Resume: backend since 2020 (6 years). Hunter note: 4 years in backend.'),bud:E('v','Expects $4k/month.','note'),node:E('v','Express APIs, live walkthrough.','screening',570),aws:E('u',''),pg:E('v','','resume'),ms:E('v','','screening',690),elig:ELIG_OK},
+  contact:'Bruno M.: resume says 6 years in backend, your note says 4. Which is right?',
+  decision:{v:'none'}},
+ {id:'diego',rcv:20,name:'Diego S.',hunter:'Hunter 3',file:'DiegoS_resume.pdf',dur:0,screen:'missing',
+  resume:[['Backend Engineer · Cuota','2017 - now']],skills:'Node.js, Fastify, MongoDB, AWS',
+  note:'Strong Node profile. Expects $4.2k/month. Available now.',
+  r:{en:E('u','No evidence in resume or hunter note. No screening recording.'),yrs:E('v','Backend since 2017 (9 years).','resume'),bud:E('v','Expects $4.2k/month.','note'),node:E('v','','resume'),aws:E('v','','resume'),pg:E('u',''),ms:E('v','','resume'),elig:ELIG_OK},
+  decision:{v:'none'}},
+ {id:'elena',rcv:5,name:'Elena V.',hunter:'Hunter 3',file:'ElenaV_resume.pdf',dur:1010,screen:'ok',
+  resume:[['Backend Engineer · Viajes Sur','2019 - now'],['Developer · Freelance','2016 - 2019']],skills:'Node.js, TypeScript, PostgreSQL, AWS, Kafka',
+  note:'Very solid. Expects $4.8k/month. Available in 3 weeks.',
+  r:{en:E('u','English C1 is not documented in the resume, screening or hunter note.'),yrs:E('v','Backend since 2016.','resume'),bud:E('c','Hunter note: expects $4.8k/month. Screening 12:40: says around $6k.'),node:E('v','','resume'),aws:E('v','','resume'),pg:E('v','','resume'),ms:E('u',''),elig:ELIG_OK},
+  contact:'Elena V.: your note says $4.8k/month, in the screening (12:40) she says around $6k. Which is right?',
+  decision:{v:'none'}},
+ {id:'facundo',rcv:49,name:'Facundo L.',hunter:'Hunter 1',file:'FacundoL_resume.pdf',dur:980,screen:'ok',
+  resume:[['Backend Developer · Banco Ilustrativo','2018 - now']],skills:'Java, Spring Boot, Oracle',
+  note:'Strong Java engineer, open to Node.',
+  r:{en:E('v','Fluent.','screening',70),yrs:E('v','Backend since 2018.','resume'),bud:E('v','Expects $4k/month.','note'),node:E('x','Resume: Java and Spring, no Node.js. Says no Node experience.','screening',375),aws:E('u',''),pg:E('x',''),ms:E('v',''),elig:ELIG_OK},
+  decision:{v:'dont',reason:'doesnt',reasonReq:'node',note:''}},
+ {id:'gabriela',rcv:1,name:'Gabriela P.',hunter:'Hunter 2',seen:false,file:'GabrielaP_resume.pdf',dur:0,screen:'broken',
+  resume:[['Backend Engineer · Mercadito','2021 - now'],['Junior Developer · Estudio Uno','2019 - 2021']],skills:'Node.js, PostgreSQL, GCP',
+  note:'Submitted today. Screening done yesterday.',
+  r:{en:E('u',''),yrs:E('u',''),bud:E('u',''),node:E('u',''),aws:E('u',''),pg:E('u',''),ms:E('u',''),elig:E('u','')},
+  decision:{v:'none'}},
+ SENTC('lucas','Lucas F.','Hunter 1','LucasF_resume.pdf','Solid backend, e-commerce background.'),
+ SENTC('sofia','Sofía K.','Hunter 2','SofiaK_resume.pdf','Strong Node.js, led a migration to AWS.'),
+ SENTC('tomas','Tomás B.','Hunter 3','TomasB_resume.pdf','Good communicator, fintech side projects.'),
+ SENTC('julia','Julia N.','Hunter 1','JuliaN_resume.pdf','Backend with payments exposure.')
+];
+const initial = ()=>JSON.parse(JSON.stringify({
+  reqs:REQS0, cands:CANDS0, version:1, banner:null, sent:SENT0(), view:'role', mode:'summary',
+  candId:null, sourceTab:'resume', playAt:null, draft:null, discardOpen:false, recordOpen:false, openRounds:{1:true}, sendStep:1, send:{channel:'Email',recipients:'hiring@acme.example, cto@acme.example'}
+}));
+let S = initial();
+
+/* ---------- helpers ---------- */
+const h = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const mmss = t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+const ELIG = {id:'elig',label:'Eligibility',type:'must',elig:true};
+const musts = ()=>[...S.reqs.filter(q=>q.type==='must'),ELIG];
+const nices = ()=>S.reqs.filter(q=>q.type==='nice');
+const cand = id=>S.cands.find(c=>c.id===id);
+const ent = (c,q)=>c.r[q.id]||(c.sentAt?{s:'na',ev:'Added after this candidate was sent.'}:{s:'u',ev:''});
+const WORD = {u:'not verified',c:'conflict',x:"doesn't meet",v:'meets',na:'N/A'};
+const GLYPH = {v:'✓',u:'?',c:'!',x:'✗',na:'-'};
+const CLS = {v:'t-ok',u:'t-pend',c:'t-pend',x:'t-no',na:'muted'};
+function status(c){
+  const items = musts().map(q=>({q,e:ent(c,q)}));
+  const x = items.filter(i=>i.e.s==='x');
+  if(x.length) return {k:'dont',items:x};
+  const p = items.filter(i=>i.e.s==='u'||i.e.s==='c');
+  if(p.length) return {k:'confirm',items:p};
+  return {k:'meets',items:[]};
+}
+const itemText = i=>`${i.q.label}: ${WORD[i.e.s]}`;
+// Candidate-level status is text only; the ✓ ? ! ✗ glyphs belong to each requirement's state
+const STATUS_LABEL = {meets:'Meets',confirm:'To confirm',dont:"Doesn't meet"};
+const badge = c=> c.sentAt ? `<span class="badge b-sent" title="${h(c.sentAt)}">Sent ${h(c.sentTs?rel(c.sentTs):c.sentAt)}</span>` : `<span class="badge b-${status(c).k}">${STATUS_LABEL[status(c).k]}</span>`;
+function evidenceSummary(c){
+  const st=status(c), n=musts().length;
+  if(st.k==='meets') return `${n}/${n} must-haves met.`;
+  if(st.k==='dont') return `Doesn't meet: ${st.items.map(i=>i.q.label).join(', ')}.`;
+  return `To confirm: ${st.items.map(itemText).join(', ')}.`;
+}
+const andList = a=>a.length>1?a.slice(0,-1).join(', ')+' and '+a[a.length-1]:(a[0]||'');
+const batch = ()=>S.cands.filter(c=>c.decision.v==='present'&&!c.sentAt);
+const currentRound = ()=>Math.max(0,...S.sent.map(b=>b.round||0))+1;
+const active = ()=>S.cands.filter(c=>!c.sentAt);
+function rel(ts){
+  const m=Math.round((Date.now()-ts)/60000);
+  if(m<1) return 'Just now'; if(m<60) return `${m} min ago`;
+  const hh=Math.floor(m/60); if(hh<24) return `${hh} hr ago`;
+  const d=Math.floor(hh/24); if(d<30) return `${d} d ago`;
+  const mo=Math.floor(d/30); return `${mo} month${mo===1?'':'s'} ago`;
+}
+const received = c=>rel(T0-c.rcv*3600e3);
+const DKEY = {present:'tosend',dont:'dont',waiting:'asked',none:'none'};
+const hay = c=>{ const st=status(c), parts=[c.name,c.hunter,STATUS_LABEL[st.k],...st.items.map(itemText)];
+  const d=c.decision.v; parts.push(d==='present'?'In next batch':d==='dont'?'Discarded':d==='waiting'?'Asked hunter':'No decision');
+  if(c.sentAt){ const g=stageOf(c); parts.push(STAGE[g.k], g.said||'', 'Sent'); }
+  return parts.join(' ').toLowerCase(); };
+const matchQ = c=>!S.q || hay(c).includes(S.q.trim().toLowerCase());
+const passes = c=>matchQ(c) && (!S.filter || (S.filter.k==='status' ? status(c).k===S.filter.v : DKEY[c.decision.v]===S.filter.v));
+function clearStaleFilter(c){
+  if(!S.filter) return false;
+  const matches=S.filter.k==='status'?status(c).k===S.filter.v:DKEY[c.decision.v]===S.filter.v;
+  if(matches) return false;
+  S.filter=null; S.discardOpen=false;
+  return true;
+}
+function candidateSections(){
+  return {review:S.cands.filter(c=>!c.sentAt&&c.decision.v!=='dont'),discarded:S.cands.filter(c=>!c.sentAt&&c.decision.v==='dont'),sent:S.cands.filter(c=>!!c.sentAt)};
+}
+const sectionMatches = kind => candidateSections()[kind].filter(passes);
+const noNote = c=>status(c).k!=='meets' && (!(c.decision.note||'').trim() || !!c.decision.needsNote);
+
+let toastTimer;
+function toast(msg,kind,extra,acts){
+  const el=document.getElementById('toast');
+  el.innerHTML=`<div class="toast${S.view==='candidate'?' r':''}" data-act="closeToast">${kind?`<span class="k">${h(kind)}</span>`:''}${h(msg)}${extra?`<div style="margin-top:6px;padding-top:6px;border-top:1px solid #344558">${h(extra)}</div>`:''}${acts&&acts.length?`<div class="tacts">${acts.map(a=>`<button class="${a.pri?'tbtn':'tlink'}" data-act="${a.act}" ${a.id?`data-id="${a.id}"`:''}>${h(a.label)}</button>`).join('')}</div>`:''}<button class="x" data-act="closeToast" aria-label="Dismiss message">×</button></div>`;
+  document.getElementById('live').textContent=(kind?kind+': ':'')+msg+(extra?' '+extra:'');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{el.innerHTML=''},9000);
+}
+const product = msg=>toast(msg,'In the product');
+function decided(c,prev){
+  S.undo={id:c.id,prev};
+  const n=batch().length;
+  if(c.decision.v==='present') toast(`${c.name} added to the next batch (${n} candidate${n===1?'':'s'}).`,'','',[{label:'View batch',act:'prepare',pri:true},{label:'Undo',act:'undo'}]);
+  else toast(`${c.name} discarded. They won't be in the batch.`,'','',[{label:'Undo',act:'undo'}]);
+}
+
+/* ---------- role view ---------- */
+function roleView(){
+  const A=active(), b=batch().length, sections=candidateSections(), discardedFilter=S.filter?.k==='decision'&&S.filter.v==='dont';
+  const why = A.length===0 ? 'All candidates in the batch were already sent.' : 'No candidates to send. Add candidates to the batch to send them.';
+  return `
+  <div class="rolehead">
+    <div>
+      <div class="client">Client <b>Acme Co.</b> · Round ${currentRound()} <span class="small muted" title="A round is one candidate batch for this job opening">(candidate batch)</span></div>
+      <h1>Sr Backend Engineer</h1>
+      <div class="small muted"><button class="link" data-act="editReqs">Add requirement</button></div>
+    </div>
+    <div class="batchbox">
+      <button class="btn pri" data-act="prepare" ${b?'':'disabled aria-describedby="batchWhy"'}>View batch (${b})</button>
+      ${b?'':`<div class="why" id="batchWhy">${h(why)}</div>`}
+    </div>
+  </div>
+  ${S.banner?`<div class="banner"><span>New must-have${S.banner.from==='Client feedback'?` from client feedback (${h(S.banner.date)})`:''}: <b>${h(S.banner.label)}</b>. ${S.banner.said?`Client said: "${h(S.banner.said)}" `:''}${(n=>n?`${n} candidate${n===1?'':'s'} not verified against it.`:'All candidates checked against it.')(S.cands.filter(c=>!c.sentAt&&ent(c,{id:S.banner.id}).s==='u').length)}</span> <button class="link" data-act="mode" data-v="matrix">View by requirement</button></div>`:''}
+  ${tiles()}
+  <div class="secthead">
+    <h2 class="sect">Review and send <span class="small muted">· ${(()=>{const t=sections.review.length, n=sectionMatches('review').length; return (S.q&&!discardedFilter||S.filter&&!discardedFilter)?`${n} of ${t} candidate${t===1?'':'s'}`:`${t} candidate${t===1?'':'s'}`;})()}</span> <span class="small muted">· from hunter to client</span></h2>
+    <div class="tools">
+      <div class="sbox"><svg class="lupa" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><label class="sr" for="q">Search candidates</label><input id="q" type="text" role="searchbox" data-act="search" value="${h(S.q||'')}" placeholder="Search name, hunter, open requirement or stage" autocomplete="off">${S.q?`<button class="sclear" data-act="clearSearch" aria-label="Clear search" title="Clear search">×</button>`:''}</div>
+      <div class="seg" role="group" aria-label="View">
+        <button aria-pressed="${S.mode==='summary'}" data-act="mode" data-v="summary">Summary</button>
+        <button aria-pressed="${S.mode==='matrix'}" data-act="mode" data-v="matrix">By requirement</button>
+      </div>
+    </div>
+  </div>
+  ${discardedFilter?'<div class="small muted">Viewing Discarded below.</div>':`<div class="panel"><div class="tw">${S.mode==='summary'?summaryTable('review'):matrixTable('review')}</div></div>`}
+  ${sentSection()}
+  ${discardedSection()}`;
+}
+function discardedSection(){
+  // A Status filter also lists the discarded candidates that match it (Doesn't meet usually lives here)
+  const sf=!!S.filter&&S.filter.k==='status';
+  if(S.filter && !sf && !(S.filter.k==='decision'&&S.filter.v==='dont')) return '';
+  const count=candidateSections().discarded.length, shown=sectionMatches('discarded').length, open=!!S.discardOpen;
+  if(sf && !shown) return '';
+  return `<section id="discardedSection" style="margin-top:18px" aria-label="Discarded candidates"><button id="discardedToggle" class="discard-toggle" data-act="toggleDiscard" aria-expanded="${open}" aria-controls="discardedPanel"><span class="chevron" aria-hidden="true">▸</span> Discarded <span class="small muted">- ${S.q||sf?`${shown} of ${count}`:count} candidate${count===1?'':'s'}</span></button>
+    <div id="discardedPanel" ${open?'':'hidden'}><div class="panel"><div class="tw">${discardedTable()}</div></div></div></section>`;
+}
+function discardedTable(){
+  return `<table><caption class="sr">Discarded candidates</caption><thead><tr><th scope="col">Candidate</th><th scope="col">Must-haves</th><th scope="col">Status</th><th scope="col"><span class="sr">Open</span></th></tr></thead>
+  ${groups('discarded',4,c=>{const v=musts().filter(q=>ent(c,q).s==='v').length;return `<tr class="crow" data-act="open" data-id="${c.id}"><th scope="row"><button class="cname" data-act="open" data-id="${c.id}">${h(c.name)}</button><div class="small muted hunterline">From ${h(c.hunter)}</div></th><td>${v}/${musts().length}${mustHaveSummary(c)}</td><td>${badge(c)}</td><td class="chev" aria-hidden="true">›</td></tr>`;})}</table>`;
+}
+const ST_TILES=[['meets','Meets','t-ok'],['confirm','To confirm','t-pend'],['dont',"Doesn't meet",'t-no']];
+const D_TILES=[['tosend','In next batch'],['dont','Discarded'],['none','No decision']];
+function filterName(){
+  const f=S.filter; if(!f) return '';
+  return f.k==='status' ? ST_TILES.find(t=>t[0]===f.v)[1] : D_TILES.find(t=>t[0]===f.v)[1];
+}
+// Demo "today" matches the rest of the illustrative data (Nov 5). Date input stores ISO; lists show "Nov 3".
+const TODAY_ISO='2026-11-05';
+const isoDate=iso=>{ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||TODAY_ISO)||/^(\d{4})-(\d{2})-(\d{2})$/.exec(TODAY_ISO); return new Date(+m[1],+m[2]-1,+m[3]); };
+const shortDate=iso=>isoDate(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const longDate=iso=>isoDate(iso).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+// Second click on the pressed chip and Clear filter both land here. Focus returns to the chip that was on.
+function clearFilter(focusSel){
+  S.filter=null; S.discardOpen=false; render(focusSel);
+  const n=S.cands.filter(c=>!c.sentAt&&matchQ(c)).length;
+  document.getElementById('live').textContent=`Filter cleared. Showing all ${n} candidate${n===1?'':'s'}.`;
+}
+function tiles(){
+  const A=active(); // Status and Decision count the same set: every candidate not yet sent, discarded included
+  const on=(k,v)=>!!S.filter&&S.filter.k===k&&S.filter.v===v;
+  const tile=(k,v,label,n,cls)=>`<button class="tile" aria-pressed="${on(k,v)}" data-act="filter" data-k="${k}" data-v="${v}"><span class="l ${cls||''}">${label}</span><span class="n">${n}</span></button>`;
+  // One row: two labelled groups in sentence case (Status = the table's column name), Clear filter at the end
+  return `<div class="tiles" role="group" aria-label="Filter candidates">
+    <div class="tgroup" role="group" aria-labelledby="tgS"><div class="glabel" id="tgS">Status</div><div class="row">
+      ${ST_TILES.map(([v,l,cls])=>tile('status',v,l,A.filter(c=>status(c).k===v).length,cls)).join('')}</div></div>
+    <div class="tgroup" role="group" aria-labelledby="tgD"><div class="glabel" id="tgD">Decision</div><div class="row">
+      ${D_TILES.map(([v,l])=>tile('decision',v,l,A.filter(c=>DKEY[c.decision.v]===v).length)).join('')}</div></div>
+    ${S.filter?'<button class="link clear-filter" data-act="clearFilter">Clear filter</button>':''}
+  </div>`;
+}
+function groups(kind,colspan,row){
+  const ns=kind==='discarded'?sectionMatches('discarded'):sectionMatches('review');
+  const empty = S.q?`No candidates match "${h(S.q)}".`:S.filter?'No candidates match this filter.':kind==='discarded'?'No discarded candidates.':(S.cands.length?'No candidates in review. See Discarded or After sending below.':'No candidates yet. Candidates from hunters for this job opening will appear here.');
+  return `<tbody>${ns.length?ns.map(row).join(''):`<tr><td colspan="${colspan}" class="small muted">${empty}</td></tr>`}</tbody>`;
+}
+// Action = only what there is to do. Decided states live in a tag next to the name (stateTag).
+function actionCell(c){
+  const d=c.decision;
+  if(d.v==='none'||d.v==='waiting') return nextCell(c);
+  if(d.v==='present'&&!noNote(c)) return `<div class="done">✓ In next batch</div>`;
+  if(d.v==='present'&&noNote(c)&&status(c).k==='confirm') return `<div class="done">✓ In next batch</div><div class="row-actions" style="margin-top:2px;align-items:center">${checkBtn(c,true)}<button class="link quiet" data-act="addNote" data-id="${c.id}" data-ret="role" aria-label="Or add a note to send ${h(c.name)} anyway">Or add a note to send it anyway</button></div>`;
+  if(d.v==='present'&&noNote(c)) return`<div class="done">✓ In next batch</div><div class="small t-pend" style="margin-bottom:4px"><b>Note needed</b></div><button class="btn sm ib" data-act="addNote" data-id="${c.id}" data-ret="role" aria-label="Add a note for ${h(c.name)}">${ico('note')}Add note</button>`;
+  return '';
+}
+// In the batch but still To confirm: the way out is checking the requirement; a note is the fallback.
+const newPending = c=>status(c).k==='confirm' ? status(c).items.filter(i=>(c.decision.newReqs||[]).includes(i.q.id)) : [];
+// What the new note is about: must-haves added after the decision, else every pending one.
+const toCheck = c=>{ const n=c.decision.needsNote?newPending(c):[]; return n.length?n:status(c).items; };
+// Add note on a decision that predates a new must-have: the field starts with the existing note, to be extended.
+const newLabels = c=>{ const n=newPending(c); return n.length ? n.map(i=>i.q.label).join(', ') : 'the new must-have'; };
+const noteErrMsg = (c,d)=> d.prev&&d.note.trim() ? `Decision not saved. Update the note to cover ${newLabels(c)}.` : 'Decision not saved. Add a note to save it.';
+const caretEnd = ()=>{ const t=document.getElementById('note'); if(t){ t.focus(); t.setSelectionRange(t.value.length,t.value.length); } };
+const readyMsg = c=>`New must-haves met. ${c.name} ${status(c).k==='meets'?'is ready to send':'can go with the earlier note'}.`;
+function checkBtn(c,sm){
+  const it=toCheck(c), q=it[0].q, label=it.length===1?`Check ${q.label}`:'Check must-haves';
+  return `<button class="btn ${sm?'sm ':''}pri ib" data-act="checkReq" data-id="${c.id}" data-q="${q.id}" aria-label="${h(label)} for ${h(c.name)}">${label}</button>`;
+}
+function stateTag(c){
+  const d=c.decision, when=t=>new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  if(d.v==='dont'&&d.reason==='withdrawn') return `<span class="tag st">Withdrawn</span>`;
+  if(d.v==='dont'&&status(c).k!=='dont') return `<span class="tag st">Discarded</span>`;
+  return '';
+}
+function nextCell(c){
+  const d=c.decision.v, st=status(c);
+  if(c.sentAt) return '';
+  const add=`<button class="btn sm ib ${st.k==='meets'?'pri':''}" data-act="quickPresent" data-id="${c.id}" aria-label="Add ${h(c.name)} to batch">${ico('present')}Add to batch</button>`;
+  const dis=`<button class="btn sm discard-icon" data-act="rowDiscard" data-id="${c.id}" aria-label="Discard ${h(c.name)}" data-tooltip="Discard ${h(c.name)}">${ico('dont')}</button>`;
+  const con=`<button class="btn sm ib" data-act="contact" data-id="${c.id}" aria-label="Contact hunter about ${h(c.name)}">${ico('contact')}Contact hunter</button>`;
+  const when=t=>new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  if(d==='waiting') return `<div class="row-actions" style="align-items:center;flex-wrap:nowrap"><span class="small muted" title="Asked ${h(when(c.decision.askedAt))}">Asked hunter</span>${dis}</div>`;
+  const acts = st.k==='meets'?[add,dis]:st.k==='confirm'?[con,dis]:[dis];
+  return `<div class="row-actions">${acts.join('')}</div>`;
+}
+const labelOf = id=>(S.reqs.find(q=>q.id===id)||(id==='elig'?ELIG:{label:''})).label;
+function mustHaveSummary(c){
+  const items=musts().map(q=>({q,e:ent(c,q)}));
+  const pending=items.filter(i=>i.e.s==='u'||i.e.s==='c');
+  const unmet=items.filter(i=>i.e.s==='x');
+  const pendingText=pending.length===1?`${pending[0].q.label} to confirm`:`${pending.length} requirements to confirm`;
+  const unmetText=unmet.length===1?`Doesn't meet ${unmet[0].q.label}`:`Don't meet ${unmet.length} requirements`;
+  return `${pending.length?`<span class="pending t-pend" title="${h(pendingText)}">${h(pendingText)}</span>`:''}${unmet.length?`<span class="pending t-no" title="${h(unmetText)}">${h(unmetText)}</span>`:''}`;
+}
+function summaryTable(kind='review'){
+  const n=musts().length;
+  return `<table><caption class="sr">Candidates for this job opening</caption><thead><tr><th scope="col">Candidate</th><th scope="col">Received</th><th scope="col">Must-haves</th><th scope="col">Nice-to-haves</th><th scope="col">Status</th><th scope="col">Action</th><th scope="col"><span class="sr">Open</span></th></tr></thead>
+  ${groups(kind,7,c=>{
+    const v=musts().filter(q=>ent(c,q).s==='v').length;
+    const nv=nices().filter(q=>ent(c,q).s==='v').length;
+    const pend=mustHaveSummary(c);
+    return `<tr class="crow ${c.sentAt?'sentrow':''} ${c.decision.v==='dont'?'outrow':''}" data-act="open" data-id="${c.id}"><td><button class="cname" data-act="open" data-id="${c.id}">${h(c.name)}</button> ${c.seen===false?'<span class="tag new">New<span class="sr">, not opened yet</span></span>':''} ${stateTag(c)}<div class="small muted">From ${h(c.hunter)}</div></td>
+      <td class="small" style="white-space:nowrap" title="${h(new Date(T0-c.rcv*3600e3).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))}">${h(received(c))}</td><td>${v}/${n}${pend}</td><td class="small muted">${nv}/${nices().length}</td><td>${badge(c)}</td><td>${actionCell(c)}</td><td class="chev" aria-hidden="true">›</td></tr>`;
+  })}</table>`;
+}
+function matrixTable(kind='review'){
+  const ms=musts(), ns=nices(), open=!!S.niceExpand;
+  const cols=open?[...ms,...ns]:ms;
+  const head=(q,first=false)=>`<th scope="col" class="req${first?' nicefirst':''}">${h(q.label)}</th>`;
+  const niceGroup=ns.length?`<th scope="colgroup" colspan="${open?ns.length:1}" class="group-head nicefirst"><button class="link small" data-act="toggleNice" aria-expanded="${open}" aria-label="${open?'Collapse':'Expand'} nice-to-haves">Nice-to-haves (${ns.length}) <span aria-hidden="true">${open?'◂':'▸'}</span></button></th>`:'';
+  const niceHeads=ns.length?(open?ns.map((q,i)=>head(q,i===0)).join(''):'<th scope="col" class="req nicefirst"><span class="sr">Nice-to-haves met</span></th>'):'';
+  const cell=(c,q)=>{const e=ent(c,q);const w=e.ev==='Added after this candidate was sent.'?'added after sending':WORD[e.s];return `<td class="cell ${CLS[e.s]} ${open&&q.id===ns[0].id?'nicefirst':''}" title="${h(q.label)}: ${w}"><span aria-hidden="true">${GLYPH[e.s]}</span><span class="sr">${h(q.label)}: ${w}</span></td>`};
+  const niceCell=c=>ns.length?(open?'':`<td class="cell nicefirst small" style="font-weight:500">${ns.filter(q=>ent(c,q).s==='v').length}/${ns.length}<span class="sr"> nice-to-haves met</span></td>`):'';
+  return `<table class="matrix"><caption class="sr">Requirements by candidate</caption><thead><tr><th class="stick-l" aria-hidden="true"></th><th scope="colgroup" colspan="${ms.length}" class="group-head">Must-haves</th>${niceGroup}</tr><tr class="req-head"><th scope="col" class="stick-l">Candidate</th>${ms.map(q=>head(q)).join('')}${niceHeads}<th scope="col" class="stick-r matrix-status">Status</th><th scope="col" class="matrix-action">Action</th><th scope="col" class="matrix-open"><span class="sr">Open</span></th></tr></thead>
+  ${groups(kind,cols.length+(ns.length&&!open?1:0)+4,c=>`<tr class="crow" data-act="open" data-id="${c.id}"><th scope="row" class="stick-l"><button class="cname" data-act="open" data-id="${c.id}">${h(c.name)}</button><div class="small muted hunterline">From ${h(c.hunter)}</div></th>${cols.map(q=>cell(c,q)).join('')}${niceCell(c)}<td class="stick-r matrix-status">${badge(c)}</td><td class="matrix-action">${actionCell(c)}</td><td class="chev matrix-open" aria-hidden="true">›</td></tr>`)}
+  </table><div class="legend">✓ Meets · ? Not verified · ! Conflict · ✗ Doesn't meet</div>`;
+}
+function sentSection(){
+  if(S.filter) return '';
+  const rounds=[...S.sent].sort((a,b)=>b.ts-a.ts).map(b=>({b,rows:b.items.map(it=>({it,st:(b.stage||{})[it.name]||{k:'review'},c:S.cands.find(x=>x.name===it.name)})).filter(r=>r.c&&matchQ(r.c)).sort((x,y)=>STAGE_ORDER.indexOf(x.st.k)-STAGE_ORDER.indexOf(y.st.k))})).filter(g=>g.rows.length);
+  const count=rounds.reduce((n,g)=>n+g.rows.length,0);
+  const ICO2={ext:'<path d="M14 4h6v6"/><path d="M20 4 10 14"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>'};
+  const ic=k=>`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO2[k]}</svg>`;
+  return `<h2 id="sentH" class="sect" tabindex="-1" style="margin-top:28px">After sending <span class="small muted">· ${count} candidate${count===1?'':'s'}${S.q?` matching "${h(S.q)}"`:''}</span></h2>
+  ${rounds.map(({b,rows})=>{const open=!!S.openRounds[b.round];return `<section class="round-group" aria-label="Round ${b.round}"><button class="round-toggle" data-act="toggleRound" data-round="${b.round}" aria-expanded="${open}" aria-controls="round-${b.round}"><span class="chevron" aria-hidden="true">▸</span><b>Round ${b.round}</b><span class="round-meta">Sent ${h(rel(b.ts))} by ${h(b.channel.toLowerCase())} · ${rows.length} candidate${rows.length===1?'':'s'}${S.q?' matching search':''}</span></button><div id="round-${b.round}" class="round-body" ${open?'':'hidden'}><div class="tw"><table><thead><tr><th scope="col">Candidate</th><th scope="col">Stage <button class="info-btn" data-act="stageInfo" type="button" aria-label="About Stage" title="Stage comes from Bullhorn and is read-only here">?</button></th><th scope="col"><span class="sr">Actions</span></th><th scope="col"><span class="sr">Open</span></th></tr></thead><tbody>
+  ${rows.map(r=>`<tr class="crow" data-act="open" data-id="${r.c.id}"><td><button class="cname" data-act="open" data-id="${r.c.id}">${h(r.it.name)}</button><div class="small muted">From ${h(r.c.hunter)}</div></td>
+    <td><span class="stage-chip stage-${r.st.k}">${STAGE[r.st.k]}</span></td>
+    <td><div class="row-actions" style="justify-content:flex-end"><button class="btn sm ib" data-act="ext" data-msg="bullhorn" aria-label="Open ${h(r.it.name)} in Bullhorn">${ic('ext')}Bullhorn</button></div></td>
+    <td class="chev" aria-hidden="true">›</td></tr>`).join('')}
+  </tbody></table></div></div></section>`}).join('')}
+  ${rounds.length?'':`<div class="panel small muted">No sent candidates match "${h(S.q||'')}".</div>`}`;
+}
+
+function sendRecord(c){
+  if(!c.sentAt) return '';
+  const batch=[...S.sent].reverse().find(b=>b.items.some(it=>it.name===c.name));
+  const item=batch?.items.find(it=>it.name===c.name);
+  if(!batch||!item) return `<section class="send-record panel" aria-label="Send record">Send record unavailable.</section>`;
+  return `<section class="send-record panel" aria-label="Send record"><button class="send-record-toggle" data-act="toggleRecord" aria-expanded="${!!S.recordOpen}" aria-controls="sendRecordBody"><span class="chevron" aria-hidden="true">▸</span> Send record</button>
+    <div id="sendRecordBody" class="send-record-body" ${S.recordOpen?'':'hidden'}>
+      <div>Round ${h(batch.round)} · Sent ${h(batch.date)}${batch.time?', '+h(batch.time):''} by ${h(batch.channel.toLowerCase())} to ${h(batch.recipients)}.</div>
+      <div class="send-record-grid"><div><h3>Sent to client</h3><div>Resume: <span class="mono">${h(item.file)}</span></div><div>${item.screen?'Screening link included':'No screening link was sent'}</div></div>
+      <div><h3>Internal (not sent)</h3><div>${h(item.internal)}</div>${item.note?`<div style="margin-top:6px">Decision note: ${h(item.note)}</div>`:''}</div></div>
+    </div></section>`;
+}
+
+/* ---------- candidate view ---------- */
+function candView(){
+  const c=cand(S.candId), grp=S.cands.filter(x=>!!x.sentAt===!!c.sentAt).sort((a,b)=>a.sentAt&&b.sentAt?STAGE_ORDER.indexOf(stageOf(a).k)-STAGE_ORDER.indexOf(stageOf(b).k):0), i=grp.indexOf(c), next=grp[(i+1)%grp.length];
+  return `
+  <div class="nav"><button class="link" data-act="back">← Back to ${S.ret==='send'?'batch':'job opening'}</button><span class="small muted">${c.sentAt?'Sent candidate':'Candidate'} ${i+1} of ${grp.length} · <button class="link" data-act="open" data-id="${next.id}">Next: ${h(next.name)} →</button></span></div>
+  <div class="chead"><div><div class="eyebrow">Sr Backend Engineer · Acme Co.</div><h1 id="cTitle" tabindex="-1">${h(c.name)} ${badge(c)}</h1><div class="small muted">From ${h(c.hunter)} · <button class="link" data-act="ext" data-msg="bullhorn">Open in Bullhorn</button></div></div>${decisionHead(c)}</div>
+  ${decisionDraft(c)}
+  ${sendRecord(c)}
+  <div class="cgrid">
+    <section class="reqpane panel" aria-labelledby="reqH">
+      <h2 id="reqH">Requirements</h2>
+      <div class="sechead">Must-haves · ${musts().filter(q=>ent(c,q).s==='v').length}/${musts().length} met</div>
+      ${S.reqs.filter(q=>q.type==='must').map(q=>reqRow(c,q)).join('')}
+      ${reqRow(c,ELIG)}
+      <details class="nice" ${S.niceOpen?'open':''}><summary>Nice-to-haves · ${nices().filter(q=>ent(c,q).s==='v').length}/${nices().length} met</summary>
+      ${nices().map(q=>reqRow(c,q)).join('')}</details>
+    </section>
+    <div class="srcpane">${sources(c)}</div>
+  </div>`;
+}
+function reqRow(c,q,inBatch){
+  const e=ent(c,q), locked=!!c.sentAt, k=inBatch?`${c.id}-${q.id}`:q.id, dk=inBatch?` data-k="${k}" data-c="${c.id}"`:'';
+  const opts = q.elig?['v','u','x']:q.type==='must'?['v','u','c','x']:['v','u','c','x','na'];
+  const lab = {v:'✓ Meets',u:'? Not verified',c:'! Conflict',x:"✗ Doesn't meet",na:'- N/A'};
+  const SRC={resume:'Resume',note:'Hunter note',other:'Other',screening:'Screening'};
+  let src='';
+  if(e.where){
+    if(e.where.src==='screening'&&e.where.t!=null) src=`<button class="srcchip" data-act="play" data-t="${e.where.t}" aria-label="Play screening at ${mmss(e.where.t)}">▶ Screening ${mmss(e.where.t)}</button>`;
+    else if(e.where.src==='resume'||e.where.src==='note') src=`<button class="srclbl srclink" data-act="toSrc" data-src="${e.where.src}" aria-label="Show ${e.where.src==='note'?'hunter note':'resume'}">${SRC[e.where.src]}${e.ev?':':''}</button>`;
+    else src=`<span class="srclbl">${SRC[e.where.src]||h(e.where.src)}${e.ev?':':''}</span>`;
+  }
+  const addSrc = (!e.where && e.s!=='u' && e.s!=='c' && !locked) ? ` <select class="srcsel" id="w-${q.id}" data-act="where" data-q="${q.id}" aria-label="Source of the evidence for ${h(q.label)}"><option value="">Add source</option><option value="resume">Resume</option><option value="screening">Screening</option><option value="note">Hunter note</option><option value="other">Other</option></select>` : '';
+  const ICO={v:['✓','t-ok'],u:['?','t-pend'],c:['!','t-pend'],x:['✗','t-no'],na:['-','muted']};
+  const SW={v:'Meets',u:'Not verified',c:'Conflict',x:"Doesn't meet",na:'N/A'};
+  const menu=!locked&&S.reqMenu===k;
+  const ML={v:['✓','t-ok','Meets'],x:['✗','t-no',"Doesn't meet"],c:['!','t-pend','Conflict'],u:['?','t-pend','Not verified'],na:['-','muted','N/A']};
+  const main=['v','x'].filter(s=>s!==e.s), rest=['c','u','na'].filter(s=>opts.includes(s)&&s!==e.s);
+  const item=s=>`<button data-act="setReq" data-q="${q.id}"${dk} data-s="${s}"><span class="${ML[s][1]}">${ML[s][0]}</span> ${ML[s][2]}</button>`;
+  const trig = e.s==='u'
+    ? `<button class="btn sm" id="mk-${k}" data-act="markMenu" data-q="${q.id}"${dk} aria-expanded="${menu}" aria-controls="mn-${k}" aria-label="Mark ${h(q.label)} as">Mark as ▾</button>`
+    : `<button class="iconbtn" id="mk-${k}" data-act="markMenu" data-q="${q.id}"${dk} aria-expanded="${menu}" aria-controls="mn-${k}" aria-label="Mark ${h(q.label)} as" title="Mark as"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>`;
+  const ctl = locked ? '' : `<div class="rctl">${trig}${menu?`<div class="menu" id="mn-${k}" role="group" aria-label="Mark ${h(q.label)} as">${main.map(item).join('')}${rest.length?`<div class="msep" aria-hidden="true"></div>${rest.map(item).join('')}`:''}</div>`:''}</div>`;
+  const edit = '';
+  let evh=e.ev?h(e.ev):'';
+  if(e.s==='c'&&evh) evh=evh.replace(/\b(Resume|Hunter note):/g,(m,w)=>`<button class="srclbl srclink" data-act="toSrc" data-src="${w==='Resume'?'resume':'note'}" aria-label="Show ${w==='Resume'?'resume':'hunter note'}">${w}:</button>`).replace(/Screening (\d\d):(\d\d)/g,(m,a,b)=>`<button class="srcchip" data-act="play" data-t="${(+a)*60+(+b)}" aria-label="Play screening at ${a}:${b}">▶ Screening ${a}:${b}</button>`);
+  const evx=[src,evh].filter(Boolean).join(' ');
+  const line = inBatch ? `<span class="sword ${ICO[e.s][1]}">${SW[e.s]}</span>` : (e.s==='v' ? evx : `<span class="sword ${ICO[e.s][1]}">${SW[e.s]}</span>${evx?' · '+evx:''}`)+addSrc;
+  return `<div class="reqrow" id="rs-${k}" tabindex="-1">
+    <span class="sico ${ICO[e.s][1]}" aria-hidden="true">${ICO[e.s][0]}</span>
+    <div><b>${h(q.label)}</b><span class="sr">: ${SW[e.s]}</span>
+      ${line?`<div class="ev">${line}</div>`:''}
+      </div>
+    ${ctl}${edit}
+  </div>`;
+}
+function noteRule(c,v,reason){
+  const k=status(c).k;
+  if(v==='dont'&&reason==='withdrawn') return {req:false,help:''};
+  if(k==='confirm') return {req:true,help:`Still to confirm: ${status(c).items.map(i=>`${i.q.label} (${WORD[i.e.s]})`).join(', ')}. Add why you're deciding now.`};
+  if((v==='present'&&k==='dont')||(v==='dont'&&k==='meets')) return {req:true,help:'Your decision differs from the status. Add why, for the record.'};
+  return {req:false,help:''};
+}
+const ICON={
+  present:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/>',
+  dont:'<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  contact:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  note:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'};
+const ico=k=>`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+function decisionHead(c){
+  if(c.sentAt){ const b=S.sent.find(x=>x.items.some(i=>i.name===c.name)), st=(b&&b.stage||{})[c.name]||{k:'review'};
+    return `<div class="decision"><div class="dstate"><span class="small muted">Stage in Bullhorn:</span> <b class="${STAGE_CLS[st.k]}">${STAGE[st.k]}</b><div class="small muted">Sent ${h(c.sentTs?rel(c.sentTs):c.sentAt)}. Decisions are locked after a batch is marked as sent.</div></div></div>`; }
+  const d=S.draft, cur=c.decision.v, k=status(c).k;
+  if(d) return `<div class="decision"><div class="dstate"><span class="small muted">Deciding:</span> <b>${d.v==='present'?'Add to batch':'Discard'}</b><div class="small muted">${d.v==='dont'?'Pick a reason below, then save.':noteRule(c,d.v,d.reason).req?'Add a note below, then save.':'Save below. A note is optional.'}</div></div></div>`;
+  const decided = cur==='present'||cur==='dont';
+  // primary follows the status (same rule as the role list); none once decided or already asked
+  const pri = decided&&!S.decEdit ? '' : k==='meets'?'present':k==='dont'?'dont':(cur==='waiting'?'':'contact');
+  const b=(act,v,label)=>`<button class="btn ${pri===(v||act)?'pri':''} ib" data-act="${act}" ${v?`data-v="${v}"`:`data-id="${c.id}"`}>${ico(v||act)}${label}</button>`;
+  const contactBtn=b('contact','','Contact hunter'), pickBtns=b('pick','dont','Discard')+b('pick','present','Add to batch');
+  let state, acts;
+  if(!decided){
+    state = cur==='waiting' ? `<b>Asked hunter</b> · ${h(rel(c.decision.askedAt))}` : `<span class="muted">No decision yet</span>`;
+    acts = contactBtn+pickBtns;
+  } else if(S.decEdit){
+    state = `<b>${cur==='present'?'In next batch':'Discarded'}</b><div class="small muted">Pick a decision to change it or to edit the note.</div>`;
+    acts = `<button class="link small" data-act="cancelDecEdit">Keep decision</button>`+contactBtn+pickBtns;
+  } else {
+    const nn = cur==='present' && noNote(c), dd=c.decision, chk = nn && k==='confirm';
+    const why = cur==='dont' ? (dd.reason==='withdrawn'?'Withdrawn (hunter or candidate)':'') : '';
+    // New must-haves stay listed; the ones already verified are struck through as the recruiter goes.
+    const nr=(dd.newReqs||[]).map(id=>({id,label:labelOf(id),done:ent(c,{id}).s==='v'})).filter(x=>x.label);
+    // Pending names in bold (Mark as is right there in the list); the note is the inline link
+    const list=(nr.length?nr:toCheck(c).map(i=>({id:i.q.id,label:i.q.label,done:false}))).map(x=>x.done?`<s>${h(x.label)}</s><span class="sr"> (met)</span>`:`<b>${h(x.label)}</b>`).join(', ');
+    const chkLine = chk ? `<div class="small t-pend">Before sending, check ${list}. <button class="link" data-act="pick" data-v="present">Or add a note to send it anyway</button>.</div>` : '';
+    state = `<span class="dlabel">${ico(cur)}<b>${cur==='present'?'In next batch':'Discarded'}</b></span>${why?` · ${h(why)}`:''}${nn&&!chk?' · <span class="t-pend"><b>Note needed</b></span>':''}${chkLine}${dd.note?`<div class="small muted dnote">Decision note: "${h(dd.note)}"</div>`:''}`;
+    acts = contactBtn + (chk?'':nn?`<button class="btn pri ib" data-act="pick" data-v="present">${ico('note')}Add note</button>`:'') + (chk ? '' : `<button class="iconbtn" id="decEdit" data-act="decEdit" aria-label="Change decision" title="Change decision">${ico('note')}</button>`); // while a new must-have waits: only Contact hunter (the note is the link in the line above); marking it Doesn't meet brings Change decision back
+  }
+  return `<div class="decision" role="group" aria-label="Decision"><div class="dstate">${state}</div><div class="dacts">${acts}</div></div>`;
+}
+function decisionDraft(c){
+  const d=S.draft; if(!d||c.sentAt) return '';
+  const rule=noteRule(c,d.v,d.reason), pendReqs=[...musts(),...nices()];
+  return `<section class="panel dstrip" aria-labelledby="dH"><h2 id="dH" tabindex="-1">${d.prev?`Update the note for ${h(c.name)}`:d.v==='present'?`Add ${h(c.name)} to batch`:`Discard ${h(c.name)}`}</h2>
+    <div class="dform">
+      ${d.v==='dont'?`<fieldset style="border:0;padding:0;margin:0 0 10px"><legend class="small" style="font-weight:600">Reason</legend>
+        ${[['doesnt','A requirement is not met'],['notverified','A requirement is not verified'],['elig','Eligibility'],['withdrawn','Withdrawn (hunter or candidate)'],['other','Other']].map(([v,l])=>`<label><input type="radio" name="reason" value="${v}" data-act="reason" ${d.reason===v?'checked':''}> ${l}</label>`).join('')}
+        ${(d.reason==='doesnt'||d.reason==='notverified')?`<label class="small" for="rq">Which requirement?</label><select id="rq" data-act="reasonReq">${pendReqs.map(q=>`<option value="${q.id}" ${d.reasonReq===q.id?'selected':''}>${h(q.label)}</option>`).join('')}</select>`:''}
+      </fieldset>`:''}
+      <label for="note" style="font-weight:600">${rule.req?'Decision note (required)':'Decision note (optional)'}</label>
+      ${rule.help||d.prev?`<div class="help" id="noteHelp">${d.prev?h(`Update the note to cover ${newLabels(c)}. The rest of it still applies.`):h(rule.help)}</div>`:''}
+      <textarea id="note" data-act="note" ${rule.req?'aria-required="true"':''} ${rule.help||d.prev?'aria-describedby="noteHelp'+(d.error?' noteErr':'')+'"':(d.error?'aria-describedby="noteErr"':'')} ${d.error?'aria-invalid="true"':''}>${h(d.note)}</textarea>
+      ${d.error?`<div class="err" id="noteErr">${h(noteErrMsg(c,d))}</div>`:''}
+      <div class="row-actions" style="margin-top:10px"><button class="btn pri" data-act="saveDecision">Save decision</button><button class="btn" data-act="cancelDecision">Cancel</button></div>
+    </div></section>`;
+}
+function resumeDoc(c){
+  const v=CV[c.id]; if(!v) return '';
+  return `<div class="cvdoc" id="cvdoc"><div class="cvpage">
+    <div class="cvname">${h(c.name)}</div><div class="cvtitle">${h(v.title)}</div>
+    <div class="cvmeta">${h(v.loc)} · ${h(v.mail)} · linkedin.com/in/example</div>
+    <div class="cvh">Summary</div><p>${h(v.summary)}</p>
+    <div class="cvh">Experience</div>
+    ${v.jobs.map(j=>`<div class="cvjob"><div class="cvjt"><span><b>${h(j.r)}</b> · ${h(j.co)}</span><span class="cvd">${h(j.d)}</span></div><ul>${j.b.map(x=>`<li>${h(x)}</li>`).join('')}</ul></div>`).join('')}
+    <div class="cvh">Skills</div><p>${v.skills.map(h).join(' · ')}</p>
+    <div class="cvh">Education</div><p>${h(v.edu)}</p>
+    ${v.langs?`<div class="cvh">Languages</div><p>${h(v.langs)}</p>`:''}
+  </div></div>`;
+}
+function transcript(c){
+  const t=TR[c.id];
+  if(!t) return `<section class="panel trx" aria-label="Transcript"><div class="small muted">No transcript for this recording. Listen to it in the player above.</div></section>`;
+  const at=S.playAt, cur=at==null?-1:t.lines.reduce((k,l,i)=>l[0]<=at?i:k,-1);
+  const marks={}; [...musts(),...nices()].forEach(q=>{const e=ent(c,q); if(e.where&&e.where.src==='screening'&&e.where.t!=null) marks[e.where.t]=q.label;});
+  return `<details class="panel trx" ${S.trOpen?'open':''}><summary><b>Transcript</b> <span class="small muted">· from ${h(t.src)} · each line plays from its time</span></summary>
+    <ol class="tlines">${t.lines.map((l,i)=>`<li class="${i===cur?'on':''}"><button class="tl" data-act="play" data-t="${l[0]}" aria-label="Play from ${mmss(l[0])}">${mmss(l[0])}</button><div><b>${h(l[1])}:</b> ${h(l[2])}${marks[l[0]]?` <span class="tag">${h(marks[l[0]])}</span>`:''}</div></li>`).join('')}</ol></details>`;
+}
+function sources(c){
+  const tab=S.sourceTab||'resume';
+  const marks=[...musts(),...nices()].map(q=>({q,e:ent(c,q)})).filter(m=>m.e.where&&m.e.where.src==='screening'&&m.e.where.t!=null);
+  let screening;
+  if(c.screen==='missing') screening=`<div class="srcstate">No screening recording linked. Ask the hunter for the link.<div style="margin-top:8px"><button class="btn sm" data-act="contact" data-id="${c.id}">Contact hunter</button></div></div>`;
+  else if(c.screen==='broken') screening=`<div class="srcstate">This screening link didn't open. Open it in Hireflix or ask the hunter for a new one.<div class="row-actions" style="margin-top:8px"><button class="btn sm" data-act="ext" data-msg="hireflix">Open in Hireflix</button><button class="btn sm" data-act="contact" data-id="${c.id}">Contact hunter</button></div></div>`;
+  else {
+    const at=S.playAt??0;
+    screening=`<div class="player"><div class="now">${S.playAt!=null?`▶ Playing from ${mmss(at)}`:'▶ Ready'} · ${mmss(c.dur)}</div>
+      <div class="timeline" aria-label="Evidence marked in the screening"><div class="track"></div><div class="head" style="left:${at/c.dur*100}%"></div>
+      ${marks.sort((a,b)=>a.e.where.t-b.e.where.t).map((m,i)=>`<button class="mark ${i%2?'up':''} ${S.playAt===m.e.where.t?'on':''}" style="left:${m.e.where.t/c.dur*100}%" data-act="play" data-t="${m.e.where.t}" aria-label="Play screening at ${mmss(m.e.where.t)}, evidence for ${h(m.q.label)}">${h(m.q.label.split(' ')[0])}<small>${mmss(m.e.where.t)}</small></button>`).join('')}
+      </div><div class="small" style="color:#c0d6f0">Marks show where the evidence for each requirement is.</div></div>`;
+  }
+  return `
+  <div class="source-tabs" role="tablist" aria-label="Candidate sources">
+    ${[['resume','Resume'],['screening','Screening'],['note','Hunter note']].map(([id,label])=>`<button id="tab-${id}" role="tab" type="button" data-act="sourceTab" data-src="${id}" aria-selected="${tab===id}" aria-controls="src-${id}" tabindex="${tab===id?'0':'-1'}">${label}</button>`).join('')}
+  </div>
+  <div id="src-resume" role="tabpanel" aria-labelledby="tab-resume" tabindex="0" ${tab==='resume'?'':'hidden'}><section class="panel" aria-labelledby="rsH"><div class="rshead"><h2 id="rsH">Resume (original, unedited)</h2><button class="link small mono" data-act="ext" data-msg="resume" data-file="${h(c.file)}">${h(c.file)}</button></div>${resumeDoc(c)}</section></div>
+  <div id="src-screening" role="tabpanel" aria-labelledby="tab-screening" tabindex="0" ${tab==='screening'?'':'hidden'}><section class="panel scr" aria-labelledby="scH"><h2 id="scH">Screening recording</h2>${screening}</section>${c.screen==='ok'?transcript(c):''}</div>
+  <div id="src-note" role="tabpanel" aria-labelledby="tab-note" tabindex="0" ${tab==='note'?'':'hidden'}><section class="panel" aria-labelledby="hnH"><h2 id="hnH">Hunter note</h2><div class="small">"${h(c.note)}"</div></section></div>`;
+}
+
+/* ---------- send view ---------- */
+function sendView(){
+  const B=batch(), risky=B.filter(c=>status(c).k!=='meets'), missing=risky.filter(noNote);
+  const notInc=S.cands.filter(c=>!c.sentAt&&c.decision.v!=='present');
+  const wait=notInc.filter(c=>c.decision.v==='waiting'), none=notInc.filter(c=>c.decision.v==='none');
+  const step=S.sendStep||1;
+    return `
+  <div class="nav"><button class="link" data-act="back">← Back to job opening</button></div>
+  <div class="sendbar">Batch for <b>Acme Co.</b> · Job opening: <b>Sr Backend Engineer</b> · Round ${currentRound()}</div>
+  <ol class="stepper" aria-label="Batch progress">${['Review','Send and mark as sent'].map((label,i)=>{const n=i+1, st=n<step?'done':n===step?'cur':'next';return `<li class="${st}" ${st==='cur'?'aria-current="step"':''}><span class="dot" aria-hidden="true">${st==='done'?'✓':n}</span><span class="lbl"><span class="sr">Step ${n} of 2: </span>${label}${st==='done'?'<span class="sr"> (done)</span>':''}</span></li>`}).join('')}</ol>
+  ${step===1?`<section class="panel step" aria-labelledby="s1"><h2 id="s1" tabindex="-1"><span class="sr">Step 1 of 2: </span>Review what goes out</h2>
+    <div class="s1head" aria-hidden="true"><div><h3>What Acme Co. receives</h3><p class="small muted">The client summary you copy in the next step.</p></div><div><h3>Internal only</h3><p class="small muted">Not sent to Acme Co. What's still open before sending.</p></div></div>
+    <ul class="s1rows" aria-label="Candidates in this batch">${B.map(c=>{const its=musts().map(q=>({q,e:ent(c,q)}));
+      const rows=['x','c','u'].flatMap(k=>its.filter(i=>i.e.s===k)).map(i=>reqRow(c,i.q,true)).join('');
+      const nb=status(c).k==='meets'?'':noNote(c)
+        ?`<div class="notebox need" role="note"><b>Note needed</b>${c.decision.note?`<div class="small">Earlier decision note: "${h(c.decision.note)}"</div>`:''}<button class="btn small-btn" data-act="addNote" data-id="${c.id}">Add a note for ${h(c.name)}</button></div>`
+        :`<div class="cknote small"><span class="muted">Your note:</span> "${h(c.decision.note)}" <button class="link" data-act="open" data-id="${c.id}">Open ${h(c.name)}</button></div>`;
+      return `<li class="s1row">
+        <div class="s1top" id="ck-${c.id}" tabindex="-1"><b>${h(c.name)}</b> ${badge(c)}</div>
+        <div class="s1body">
+          <div class="pvcell"><div class="cell-lbl small muted">Sent to Acme Co.</div><div class="small">Resume: <button class="link mono" data-act="ext" data-msg="resume" data-file="${h(c.file)}">${h(c.file)}</button></div><div class="small">Screening: ${c.screen==='ok'?'<button class="link" data-act="ext" data-msg="screenlink">Open link</button>':'<span class="t-pend"><span aria-hidden="true">? </span>No screening link</span>'}</div></div>
+          <div class="ckcell"><div class="cell-lbl small muted">Internal only, not sent</div>${rows?`<div class="ckreqs">${rows}</div>`:'<span class="small muted">Nothing pending.</span>'}${nb}</div>
+        </div>
+      </li>`}).join('')}</ul>
+    ${wait.length||none.length?`<p class="small pending-line">Not in this batch yet: ${[none.length?`No decision (${none.length}): ${none.map(c=>c.name).join(', ')}`:'', wait.length?`Asked hunter (${wait.length}): ${wait.map(c=>c.name).join(', ')}`:''].filter(Boolean).map(h).join(' · ').replace(/\.?$/,'.')} Send now and they can go in a later round, or <button class="link" data-act="back">review them first</button>.</p>`:''}
+    <div class="row-actions s1foot"><button class="btn pri" data-act="sendNext" ${missing.length?'disabled aria-describedby="s1block"':''}>Next</button>${missing.length?`<span class="small t-pend" id="s1block">Add a note for ${h(andList(missing.map(c=>c.name)))} to continue.</span>`:''}</div>
+  </section>`:''}
+  ${step===2?(()=>{const CH={Email:['Email addresses','','Pre-filled from the last batch sent to this client. Change it if you sent it somewhere else.'],Slack:['Slack channel or people','#acme-hiring','Where you posted it.'],'Client tracker':['Tracker','Tracker name or link','Where you uploaded it.']}[S.send.channel];return `<section class="panel step" aria-labelledby="s2"><h2 id="s2" tabindex="-1"><span class="sr">Step 2 of 2: </span>Send the batch to Acme Co.</h2>
+    <p class="s2lead">Near doesn't send it. You send it from your email, Slack or the client tracker, then mark it as sent.</p>
+    <ol class="s2steps">
+      <li><b>Get what goes out</b><div class="row-actions"><button class="btn" data-act="ext" data-msg="copy">Copy client summary</button><button class="btn" data-act="ext" data-msg="download">Download resumes (${B.length})</button></div><div class="small muted">Name, resume and screening link for each candidate, as reviewed in step 1.</div></li>
+      <li><b>Send it to Acme Co.</b><div class="small muted">From your own email, Slack or the client tracker.</div></li>
+      <li><b>Add where you sent it</b>
+        <div class="fields">
+          <label for="ch">Channel</label><select id="ch" data-act="channel" style="max-width:240px">${['Email','Slack','Client tracker'].map(o=>`<option ${S.send.channel===o?'selected':''}>${o}</option>`).join('')}</select>
+          <label for="rcp">${CH[0]}</label><div><input type="text" id="rcp" data-act="recipients" value="${h(S.send.recipients)}" placeholder="${CH[1]}" aria-describedby="rcpHelp${S.send.err?' rcpErr':''}" ${S.send.err?'aria-invalid="true"':''}><div class="help" id="rcpHelp">${CH[2]}</div>${S.send.err?'<div class="err" id="rcpErr">Add where you sent it before marking as sent.</div>':''}</div>
+        </div>
+      </li>
+    </ol>
+    <div class="row-actions" style="margin-top:16px"><button class="btn" data-act="sendBack">Back</button><button class="btn pri" data-act="markConfirm" aria-describedby="markWhy" ${missing.length||!S.send.recipients.trim()?'disabled':''}>Mark as sent</button><span class="small t-pend" id="markWhy" ${S.send.recipients.trim()?'hidden':''}>Add where you sent it before marking as sent.</span></div>
+  </section>`})():''}`;
+}
+
+/* ---------- dialogs ---------- */
+const dlg=document.getElementById('dlg'); let returnFocus=null;
+function openDialog(html,focusSel){
+  returnFocus=document.activeElement; dlg.innerHTML=html; dlg.showModal();
+  const f=dlg.querySelector(focusSel||'button'); f&&f.focus();
+}
+dlg.addEventListener('close',()=>{returnFocus&&document.contains(returnFocus)&&returnFocus.focus()});
+let reqDraft=null;
+function reqDialog(){
+  const d=reqDraft;
+  const help = d.type==='must'?"Candidates not yet sent will show this as Not verified, so those who meet every must-have move to To confirm. Candidates in the batch stay in it: before sending, mark it for each one or add a note.":"Shown for reference. It doesn't change candidate status.";
+  dlg.innerHTML=`<div class="dlg"><h2 id="dlgTitle">Requirements</h2>
+  <ul class="reqlist">${S.reqs.map(q=>`<li><span>${h(q.label)} <span class="mh">${q.type==='must'?'Must-have':'Nice-to-have'}</span></span><span class="small muted">Added from ${h(q.from)}${q.date?' · '+h(q.date):''}${q.said?`: "${h(q.said)}"`:''}</span></li>`).join('')}</ul>
+  <h2 style="font-size:15px">Add requirement</h2>
+  <label for="nr" class="small" style="font-weight:600">Requirement</label><input type="text" id="nr" data-act="rq-label" value="${h(d.label)}" ${d.err?'aria-invalid="true" aria-describedby="nrErr"':''}>
+  ${d.err?`<div class="err" id="nrErr">Requirement not saved. Add a name for it.</div>`:''}
+  <fieldset style="border:0;padding:0;margin:10px 0"><legend class="small" style="font-weight:600">Type</legend>
+    <label><input type="radio" name="rt" value="must" data-act="rq-type" ${d.type==='must'?'checked':''}> Must-have</label> &nbsp; <label><input type="radio" name="rt" value="nice" data-act="rq-type" ${d.type==='nice'?'checked':''}> Nice-to-have</label>
+    <div class="help" aria-live="polite">${help}</div></fieldset>
+  <fieldset style="border:0;padding:0;margin:0 0 10px"><legend class="small" style="font-weight:600">Added from</legend>
+    <label><input type="radio" name="rf" value="Kickoff" data-act="rq-from" ${d.from==='Kickoff'?'checked':''}> Kickoff</label> &nbsp; <label><input type="radio" name="rf" value="Client feedback" data-act="rq-from" ${d.from==='Client feedback'?'checked':''}> Client feedback</label></fieldset>
+  ${d.from==='Client feedback'?`<label for="rd" class="small" style="font-weight:600">Date</label><div class="datefield"><input type="date" id="rd" data-act="rq-date" value="${h(d.date)}" max="${TODAY_ISO}"><span class="dateshow" id="rdShow" aria-hidden="true">${longDate(d.date)}</span></div><label for="rs" class="small" style="font-weight:600;display:block;margin-top:8px">What did the client say?</label><textarea id="rs" data-act="rq-said">${h(d.said)}</textarea>`:''}
+  <div class="acts"><button class="btn" data-act="closeDlg">Cancel</button><button class="btn pri" data-act="saveReq">Save requirements</button></div></div>`;
+}
+
+/* ---------- render ---------- */
+let lastView='role';
+document.addEventListener('toggle',e=>{ if(!e.target.classList) return; if(e.target.classList.contains('nice')) S.niceOpen=e.target.open; if(e.target.classList.contains('trx')) S.trOpen=e.target.open; },true);
+function fitPanes(){
+  const g=document.querySelector('.cgrid'), m=document.querySelector('main');
+  if(!g||innerWidth<=900){ m.style.paddingBottom=''; if(g){ g.classList.remove('fit'); g.style.height=''; } return; }
+  m.style.paddingBottom='16px';
+  g.classList.add('fit'); g.style.height=Math.max(420, innerHeight-(g.getBoundingClientRect().top+scrollY)-16)+'px';
+}
+addEventListener('resize',fitPanes);
+// Panel starts open on wide screens and makes room for itself; on narrow screens it starts collapsed.
+(()=>{ const t=document.getElementById('try'); if(innerWidth<1100) t.open=false; document.body.classList.toggle('try-open',t.open); })();
+document.getElementById('try').addEventListener('toggle',e=>{ document.body.classList.toggle('try-open',e.target.open); fitPanes(); });
+function render(focusSel){
+  const app=document.getElementById('app');
+  if(S.view!==lastView){ document.getElementById('toast').innerHTML=''; lastView=S.view; }
+  const sp=document.querySelector('.srcpane'), keep=sp&&S.view==='candidate'&&sp.dataset.c===S.candId?sp.scrollTop:0;
+  app.innerHTML = S.view==='role'?roleView():S.view==='candidate'?candView():sendView();
+  const sp2=document.querySelector('.srcpane'); if(sp2){ sp2.dataset.c=S.candId; sp2.scrollTop=keep; }
+  fitPanes();
+  if(focusSel){const f=document.querySelector(focusSel); f&&f.focus();}
+}
+
+/* ---------- actions ---------- */
+const EXT = {
+  bullhorn:()=>'opens this candidate in Bullhorn.',
+  hireflix:()=>'opens the recording in Hireflix.',
+  copy:()=>"copies a client summary with each candidate's name, resume and screening link.",
+  download:()=>batch().length===1?"downloads the resume exactly as it'll be sent.":`downloads the ${batch().length} resumes exactly as they'll be sent.`,
+  resume:el=>`opens ${el.dataset.file}, the exact file that goes to the client.`,
+  screenlink:()=>'opens the screening link the client will receive.'
+};
+function contact(c){
+  const st=status(c), labels=st.items.map(i=>i.q.label);
+  const list=labels.length>1?labels.slice(0,-1).join(', ')+' and '+labels[labels.length-1]:labels[0];
+  let msg=(c.contact&&st.items.some(i=>i.e.s==='c'))?c.contact:`${c.name}: can you confirm ${list||'the open requirements'}? I couldn't find ${labels.length>1?'them':'it'} in the resume or your note.`;
+  if(c.screen!=='ok') msg+=' Also, can you share a working screening link?';
+  let after;
+  if(c.sentAt) after=`${c.name} was already sent. The decision doesn't change.`;
+  else if(c.decision.v==='present'||c.decision.v==='dont') after=`${c.name} stays ${c.decision.v==='present'?'in the batch':'discarded'}.`;
+  else { c.decision={v:'waiting',askedAt:Date.now()}; S.draft=null; after=`${c.name} is now Asked hunter. Changing a must-have that's not verified or in conflict sets it back to No decision.`; }
+  toast(`opens Slack with ${c.hunter} and this message: "${msg}"`,'In the product',after);
+}
+// "Try this": a task is struck through once done and stays so until Reset demo.
+// 1, 2, 4, 5 read the state after each render; 3 and 6 are marked by their events (Carla starts in the batch, Round 1 starts sent).
+let tryDone=new Set();
+function updateTry(){
+  const fin=S.reqs.find(q=>q.type==='must'&&/fintech/i.test(q.label));
+  const bruno=S.cands.find(c=>c.id==='bruno');
+  if(S.filter&&S.filter.k==='status'&&S.filter.v==='confirm') tryDone.add(1);
+  if(bruno&&!Object.values(bruno.r).some(e=>e.s==='c')) tryDone.add(2);
+  if(fin) tryDone.add(4);
+  const ana=S.cands.find(c=>c.id==='ana'); if(ana&&ana.decision.v==='present') tryDone.add(7);
+  document.querySelectorAll('#tryList li').forEach(li=>{
+    const on=tryDone.has(+li.dataset.t); li.classList.toggle('done',on); const ck=li.querySelector('.ck'); if(ck) ck.textContent=on?'✓':'';
+    let m=li.querySelector('.sr'); if(on&&!m){ m=document.createElement('span'); m.className='sr'; m.textContent=' (done)'; li.append(m); } if(!on&&m) m.remove();
+  });
+  const nx=document.getElementById('tryNext'), pend=[...document.querySelectorAll('#tryList li')].find(li=>!li.classList.contains('done')); if(nx) nx.innerHTML=pend?'<span class="nxl">Up next:</span> '+pend.querySelector('.tx').innerHTML:'';
+  const tc=document.getElementById('tryCount'), total=document.querySelectorAll('#tryList li').length; if(tc) tc.textContent=tryDone.size?`${tryDone.size} of ${total} done`:`${total} tasks`;
+}
+// All tasks done: confetti once (toast instead with reduced motion). Reset demo re-arms it.
+let celebrated=false;
+function celebrate(){
+  const total=document.querySelectorAll('#tryList li').length;
+  if(celebrated||tryDone.size<total) return; celebrated=true;
+  const msg=`All ${total} tasks done. Thanks for trying the prototype.`;
+  setTimeout(()=>{ document.getElementById('live').textContent=msg; },1500); // after the last action's own announcement
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){ setTimeout(()=>toast(msg),1500); return; }
+  const cv=document.createElement('canvas'); cv.setAttribute('aria-hidden','true');
+  cv.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:60';
+  document.body.append(cv); const dpr=devicePixelRatio||1, W=innerWidth, H=innerHeight; cv.width=W*dpr; cv.height=H*dpr;
+  const x=cv.getContext('2d'); x.scale(dpr,dpr);
+  const cols=['#1a1aff','#1f7a4d','#b7791f','#c0d6f0','#e04f5f','#7c5cff'];
+  const P=Array.from({length:150},()=>({x:W*(.2+Math.random()*.6),y:-20-Math.random()*H*.3,vx:(Math.random()-.5)*6,vy:2+Math.random()*4,r:Math.random()*Math.PI,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:4+Math.random()*4,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  (function frame(t){
+    const el=t-t0; x.clearRect(0,0,W,H);
+    P.forEach(p=>{ p.vy+=.08; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; x.save(); x.globalAlpha=Math.max(0,1-Math.max(0,el-1800)/700); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.w/2,-p.h/2,p.w,p.h); x.restore(); });
+    if(el<2500) requestAnimationFrame(frame); else cv.remove();
+  })(t0);
+}
+const renderBase=render; render=function(sel){ renderBase(sel); updateTry(); celebrate(); };
+// Requirements dialog: Enter saves, except in the free-text field and on buttons (Cancel keeps its own Enter).
+dlg.addEventListener('keydown',e=>{
+  const save=dlg.querySelector('[data-act=saveReq]');
+  if(e.key!=='Enter'||e.shiftKey||e.isComposing||!save) return;
+  if(e.target.tagName==='TEXTAREA'||e.target.tagName==='BUTTON') return;
+  e.preventDefault(); save.click();
+});
+document.addEventListener('keydown',e=>{
+  const tab=e.target.closest&&e.target.closest('.source-tabs [role="tab"]');
+  if(tab&&['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){
+    const tabs=['resume','screening','note'], i=tabs.indexOf(tab.dataset.src);
+    S.sourceTab=e.key==='Home'?tabs[0]:e.key==='End'?tabs[2]:tabs[(i+(e.key==='ArrowRight'?1:2))%3];
+    render(`#tab-${S.sourceTab}`); document.querySelector('.srcpane').scrollTop=0; e.preventDefault(); return;
+  }
+  const m=e.target.closest&&e.target.closest('.menu');
+  if(e.key==='Escape'&&S.reqMenu){ const q=S.reqMenu; S.reqMenu=null; render(`#mk-${q}`); e.preventDefault(); return; }
+  if(m&&(e.key==='ArrowDown'||e.key==='ArrowUp')){ const b=[...m.querySelectorAll('button')], i=b.indexOf(e.target); b[(i+(e.key==='ArrowDown'?1:b.length-1))%b.length].focus(); e.preventDefault(); }
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.toast')) document.getElementById('toast').innerHTML='';
+  const el=e.target.closest('[data-act]');
+  if(S.reqMenu && !e.target.closest('.menu') && !(el&&el.dataset.act==='markMenu')){ S.reqMenu=null; if(!el){ render(); return; } }
+  if(!el) return;
+  const a=el.dataset.act, c=el.dataset.c?cand(el.dataset.c):S.candId?cand(S.candId):null;
+  if(a==='rq-date'){ try{ el.showPicker(); }catch(e){} return; }
+  if(['search','where','reason','reasonReq','note','channel','recipients','rq-label','rq-type','rq-from','rq-date','rq-said'].includes(a) && el.tagName!=='BUTTON' && el.type!=='radio') return;
+  switch(a){
+    case 'closeToast': document.getElementById('toast').innerHTML=''; return;
+    case 'reset': S=initial(); reqDraft=null; tryDone.clear(); celebrated=false; if(dlg.open) dlg.close(); render(); toast('Demo reset to the starting data.'); return;
+    case 'mode': e.preventDefault(); S.view='role'; S.mode=el.dataset.v; render(`[data-act=mode][data-v=${S.mode}]`); return;
+    case 'open': S.view='candidate'; S.candId=el.dataset.id; S.sourceTab='resume'; S.reqEdit=null; S.reqMenu=null; S.decEdit=false; S.cvOpen=false; S.recordOpen=false; S.lastReqChange=null; S.filterClearedByEdit=false; cand(S.candId).seen=true; S.playAt=null; S.draft=null; S.ret=null; render('#cTitle'); window.scrollTo(0,0); return;
+    case 'checkReq': { const q=el.dataset.q; if(S.view!=='candidate'||S.candId!==el.dataset.id){ S.view='candidate'; S.candId=el.dataset.id; S.sourceTab='resume'; S.decEdit=false; S.draft=null; S.ret=null; S.playAt=null; cand(S.candId).seen=true; }
+      S.reqEdit=null; S.reqMenu=null; render(`#mk-${q}`); document.getElementById(`rs-${q}`)?.scrollIntoView({block:'center'});
+      document.getElementById('live').textContent=`${labelOf(q)}: ${WORD[ent(cand(S.candId),{id:q}).s]}. Mark it once you've checked the evidence.`; return; }
+    case 'addNote': { S.view='candidate'; S.candId=el.dataset.id; S.sourceTab='resume'; S.reqEdit=null; S.reqMenu=null; S.decEdit=false; cand(S.candId).seen=true; S.playAt=null; S.ret=el.dataset.ret==='role'?'role':'send'; const x=cand(S.candId);
+      S.draft={v:'present',prev:x.decision.needsNote?x.decision.note||'':'',note:x.decision.note||'',reason:'',reasonReq:'',error:false}; render('#note'); caretEnd(); return; }
+    case 'back': {
+      const changedId=S.lastReqChange, cleared=S.filterClearedByEdit;
+      S.view=S.ret==='send'?'send':'role'; S.ret=null; S.draft=null;
+      if(S.view==='role'&&changedId&&cand(changedId).decision.v==='dont') S.discardOpen=true;
+      render();
+      if(S.view==='role'&&changedId){
+        const target=document.querySelector(`tr.crow[data-id="${changedId}"] .cname`);
+        if(target){target.focus(); target.scrollIntoView({block:'center'});} else window.scrollTo(0,0);
+        if(cleared) document.getElementById('live').textContent=`Filter cleared so ${cand(changedId).name}'s updated status stays visible.`;
+      } else if(S.view==='role'&&S.filter?.k==='decision'&&S.filter.v==='dont'){
+        const target=document.getElementById('discardedToggle'); target?.focus(); target?.scrollIntoView({block:'start'});
+      } else window.scrollTo(0,0);
+      S.lastReqChange=null; S.filterClearedByEdit=false; return; }
+    case 'filter': { const k=el.dataset.k, v=el.dataset.v, sel=`[data-act=filter][data-k="${k}"][data-v="${v}"]`;
+      if(S.filter&&S.filter.k===k&&S.filter.v===v){ clearFilter(sel); return; }
+      S.filter={k,v}; S.discardOpen=(k==='decision'&&v==='dont')||(k==='status'&&sectionMatches('discarded').length>0); render(sel);
+      if(k==='decision'&&v==='dont'){const target=document.getElementById('discardedToggle'); target?.focus(); target?.scrollIntoView({block:'start'});}
+      const n=k==='status'?sectionMatches('review').length+sectionMatches('discarded').length:(S.discardOpen?sectionMatches('discarded'):sectionMatches('review')).length;
+      document.getElementById('live').textContent=`Showing ${filterName()}: ${n} candidate${n===1?'':'s'}.`; return; }
+    case 'clearFilter': { const f=S.filter; clearFilter(f?`[data-act=filter][data-k="${f.k}"][data-v="${f.v}"]`:'[data-act=filter]'); return; }
+    case 'toggleDiscard': if(S.filter?.k==='decision'&&S.filter.v==='dont'){S.filter=null; S.discardOpen=false; render('#discardedToggle'); document.getElementById('live').textContent='Discarded closed. Filter cleared.';} else {S.discardOpen=!S.discardOpen; render('#discardedToggle');} return;
+    case 'toggleRound': {const round=el.dataset.round; S.openRounds[round]=!S.openRounds[round]; render(`[data-act=toggleRound][data-round="${round}"]`); return;}
+    case 'stageInfo': toast('Stage comes from Bullhorn and is read-only here.'); return;
+    case 'toggleNice': S.niceExpand=!S.niceExpand; render('[data-act=toggleNice]'); return;
+    case 'quickPresent': { const x=cand(el.dataset.id), prev=x.decision; x.decision={v:'present',note:''}; render(); decided(x,prev); return; }
+    case 'undo': { const u=S.undo; if(!u) return; const x=cand(u.id); x.decision=u.prev; S.undo=null; render(); document.getElementById('toast').innerHTML=''; document.getElementById('live').textContent=`Undone. ${x.name} is back to ${u.prev.v==='waiting'?'Asked hunter':'no decision'}.`; return; }
+    case 'rowDiscard': { const x=cand(el.dataset.id), st=status(x);
+      if(st.k==='dont'){ const it=st.items[0], prev=x.decision; x.decision={v:'dont',reason:'doesnt',reasonReq:it?it.q.id:'',note:''}; render(); decided(x,prev); return; }
+      S.view='candidate'; S.candId=x.id; S.sourceTab='resume'; S.reqEdit=null; S.reqMenu=null; S.decEdit=false; x.seen=true; S.playAt=null; S.ret='role';
+      S.draft={v:'dont',prev:'',note:'',reason:st.k==='confirm'?'notverified':'other',reasonReq:st.k==='confirm'?st.items[0].q.id:'',error:false}; render('#dH'); return; }
+    case 'contact': contact(cand(el.dataset.id)); render(); return;
+    case 'play': S.sourceTab='screening'; S.playAt=+el.dataset.t; render(el.classList.contains('tl')?`.tl[data-t="${el.dataset.t}"]`:`.mark[data-t="${el.dataset.t}"]`); product(`plays the screening recording from ${mmss(+el.dataset.t)}.`); return;
+    case 'ext': product(EXT[el.dataset.msg](el)); return;
+    case 'setReq': {
+      const q=el.dataset.q, s=el.dataset.s, prev=c.r[q]||{s:'u',ev:''};
+      c.r[q]={...prev,s,ev:(prev.s==='u'&&s!=='u'&&/^No evidence/.test(prev.ev||''))?'':prev.ev};
+      const isMust = q==='elig' || (S.reqs.find(x=>x.id===q)||{}).type==='must';
+      const closed = c.decision.v==='waiting' && isMust && (prev.s==='u'||prev.s==='c') && s!==prev.s;
+      if(closed) c.decision={v:'none'};
+      // The earlier note covered the old gaps; once every must-have added after it is resolved, no new note is needed.
+      const cleared = !!c.decision.needsNote && (c.decision.newReqs||[]).every(id=>ent(c,{id}).s==='v');
+      if(cleared){ c.decision.needsNote=false; c.decision.newReqs=[]; }
+      S.lastReqChange=c.id;
+      S.filterClearedByEdit=clearStaleFilter(c);
+      if(S.q&&!matchQ(c)){S.q='';S.filterClearedByEdit=true;}
+      S.reqEdit=null; S.reqMenu=null;
+      render(`#rs-${el.dataset.k||q}`);
+      if(el.dataset.k&&!document.getElementById(`rs-${el.dataset.k}`)) document.getElementById(`ck-${c.id}`)?.focus();
+      document.getElementById('live').textContent=`${labelOf(q)} marked as ${WORD[s][0].toUpperCase()+WORD[s].slice(1)}. Status: ${STATUS_LABEL[status(c).k]}.${closed?' Back to No decision.':''}${cleared?' '+readyMsg(c):''}`;
+      if(cleared) toast(readyMsg(c));
+      return; }
+    case 'markMenu': { const q=el.dataset.k||el.dataset.q; S.reqMenu=S.reqMenu===q?null:q; render(S.reqMenu?`#mn-${q} button`:`#mk-${q}`); return; }
+    case 'editReq': S.reqEdit=el.dataset.q; S.reqMenu=null; render(`[data-act=setReq][data-q="${el.dataset.q}"][aria-pressed=true]`); return;
+    case 'cancelReq': S.reqEdit=null; render(`#rs-${el.dataset.q}`); return;
+    case 'pick': {
+      const v=el.dataset.v, st=status(c);
+      let reason='', rr='';
+      if(v==='dont'){ if(st.k==='dont'){reason='doesnt';rr=st.items[0].q.id;} else if(st.k==='confirm'){reason='notverified';rr=st.items[0].q.id;} else reason='other'; }
+      const keep = c.decision.v===v ? c.decision : null;
+      S.draft={v,prev:keep&&keep.needsNote?keep.note||'':'',note:keep?keep.note||'':'',reason:keep&&keep.reason||reason,reasonReq:keep&&keep.reasonReq||rr,error:false};
+      render('#note'); caretEnd(); return; }
+    case 'reason': S.draft.reason=el.value; if((el.value==='doesnt'||el.value==='notverified')&&!S.draft.reasonReq) S.draft.reasonReq=musts()[0].id; render(`input[name=reason][value=${el.value}]`); return;
+    case 'saveDecision': {
+      const d=S.draft, rule=noteRule(c,d.v,d.reason);
+      const unchanged = !!d.prev && d.note.trim()===d.prev.trim();
+      if((rule.req && !d.note.trim()) || unchanged){ d.error=true; render('#note'); caretEnd(); document.getElementById('live').textContent=noteErrMsg(c,d); return; }
+      if(d.v==='present'&&c.decision.v!=='present'&&status(c).k==='confirm') tryDone.add(3);
+      if(d.prev&&d.v==='present') tryDone.add(5); // note updated after a new must-have (Carla in the demo)
+      const prevDec=c.decision; c.decision =d.v==='present'?{v:'present',note:d.note.trim()}:{v:'dont',note:d.note.trim(),reason:d.reason,reasonReq:d.reasonReq};
+      S.draft=null; S.decEdit=false;
+      if(S.ret==='send'){ S.view='send'; S.ret=null; if(prevDec.v!==c.decision.v) S.sendStep=1; render(`#s${S.sendStep}`); window.scrollTo(0,0); toast(d.v==='present'?`Note saved. ${c.name} stays in the batch.`:`${c.name} discarded. They're out of the batch.`); return; }
+      // A saved decision closes the candidate: back to the job opening, focus on that row
+      S.view='role'; S.ret=null; render(`tr.crow[data-id="${c.id}"] .cname`); decided(c,prevDec); return; }
+    case 'cancelDecision': S.draft=null; S.decEdit=false;
+      if(S.ret==='role'){ S.view='role'; S.ret=null; render(`tr.crow[data-id="${c.id}"] .cname`); return; }
+      render(); return;
+    case 'decEdit': S.decEdit=true; render('[data-act=pick][data-v=present]'); return;
+    case 'cancelDecEdit': S.decEdit=false; render('#decEdit'); return;
+    case 'prepare': S.view='send'; S.sendStep=1; render('#s1'); window.scrollTo(0,0); return;
+    case 'sendBack': S.sendStep=Math.max(1,S.sendStep-1); render(`#s${S.sendStep}`); window.scrollTo(0,0); return;
+    case 'sendNext': {
+      if(S.sendStep===1&&batch().some(x=>status(x).k!=='meets'&&noNote(x))){ document.querySelector('[data-act=addNote]')?.focus(); document.getElementById('live').textContent=document.getElementById('s1block')?.textContent||''; return; }
+      if(S.sendStep===2&&!S.send.recipients.trim()){ S.send.err=true; render('#rcp'); document.getElementById('live').textContent='Add where you sent it before marking as sent.'; return; }
+      S.send.err=false; S.sendStep=Math.min(2,S.sendStep+1); render(`#s${S.sendStep}`); window.scrollTo(0,0); return; }
+    case 'closeDlg': dlg.close(); reqDraft=null; return;
+    case 'markConfirm': {
+      if(S.view==='send'&&S.sendStep===2&&!S.send.recipients.trim()){ S.send.err=true; render('#rcp'); document.getElementById('live').textContent='Add where you sent it before marking as sent.'; return; }
+      if(S.view!=='send'||S.sendStep!==2||!batch().length||batch().some(x=>status(x).k!=='meets'&&noNote(x))) return;
+      { const B=batch(), names=B.map(x=>x.name);
+        const dest=S.send.recipients.split(',').map(x=>x.trim()).filter(Boolean);
+        openDialog(`<div class="dlg confirm"><h2 id="dlgTitle">Mark as sent to Acme Co.?</h2>
+          <dl class="sumlist"><dt>${B.length===1?'Candidate':`Candidates (${B.length})`}</dt><dd>${names.map(h).join('<br>')}</dd><dt>Channel</dt><dd>${h(S.send.channel)}</dd><dt>Sent to</dt><dd>${dest.map(h).join('<br>')}</dd></dl>
+          <p class="small">Near logs this send on each candidate and in Bullhorn. <b>You can't undo it.</b> Mark it only after you've sent it.</p>
+          <div class="acts"><button class="btn" data-act="closeDlg">Cancel</button><button class="btn pri" data-act="markDo">Mark as sent</button></div></div>`,'[data-act=closeDlg]'); }
+      return; }
+    case 'markDo': {
+      if(S.view!=='send'||S.sendStep!==2||!batch().length||!S.send.recipients.trim()||batch().some(x=>status(x).k!=='meets'&&noNote(x))){ dlg.close(); return; }
+      returnFocus=null; dlg.close();
+      const B=batch(), when='Nov 5', round=currentRound();
+      B.forEach(x=>{x.sentAt=when; x.sentTs=Date.now();});
+      tryDone.add(6);
+      S.sent.push({round,date:'Nov 5',time:'14:20',ts:Date.now(),channel:S.send.channel,recipients:S.send.recipients,stage:{},items:B.map(x=>({name:x.name,file:x.file,screen:x.screen==='ok',internal:evidenceSummary(x),note:x.decision.note||''}))});
+      S.openRounds[round]=true;
+      S.view='role'; S.sendStep=1; render('#sentH'); window.scrollTo(0,0);
+      toast(`Marked as sent. ${B.length} candidate${B.length===1?'':'s'} moved to After sending (In client review).`); return; }
+    case 'cvToggle': S.cvOpen=!S.cvOpen; render('[data-act=cvToggle]'); if(!S.cvOpen) document.getElementById('rsH').scrollIntoView({block:'nearest'}); return;
+    case 'sourceTab': S.sourceTab=el.dataset.src; render(`#tab-${S.sourceTab}`); document.querySelector('.srcpane').scrollTop=0; return;
+    case 'toSrc': { S.sourceTab=el.dataset.src; render(); const t=document.getElementById('src-'+el.dataset.src), pane=document.querySelector('.srcpane');
+      pane.scrollTop=0; if(!pane.closest('.cgrid.fit')) t.scrollIntoView({behavior:'smooth',block:'nearest'});
+      t.classList.remove('flash'); void t.offsetWidth; t.classList.add('flash'); return; }
+    case 'clearSearch': S.q=''; render('#q'); document.getElementById('live').textContent='Search cleared.'; return;
+    case 'toggleRecord': S.recordOpen=!S.recordOpen; render('[data-act=toggleRecord]'); return;
+    case 'editReqs': reqDraft={label:'',type:'must',from:'Client feedback',date:TODAY_ISO,said:'',err:false}; returnFocus=el; reqDialog(); dlg.showModal(); document.getElementById('nr').focus(); return;
+    case 'saveReq': {
+      const d=reqDraft;
+      if(!d.label.trim()){ d.err=true; reqDialog(); document.getElementById('nr').focus(); return; }
+      const id='q'+Date.now();
+      S.reqs.forEach(q=>q.isNew=false);
+      const shown=shortDate(d.date);
+      S.reqs.push({id,label:d.label.trim(),type:d.type,from:d.from,date:d.from==='Client feedback'?longDate(d.date):'',said:d.said,isNew:true});
+      S.cands.forEach(x=>{ if(!x.sentAt){ x.r[id]={s:'u',ev:''}; if(d.type==='must'&&x.decision.v==='present'){ x.decision.needsNote=true; x.decision.newReqs=[...(x.decision.newReqs||[]),id]; } } });
+      S.version++;
+      if(d.type==='must') S.banner={id,label:d.label.trim(),date:shown,from:d.from,said:d.from==='Client feedback'?d.said.trim():''};
+      reqDraft=null; dlg.close(); S.view='role'; render();
+      toast(d.type==='must'?`Requirements saved. ${d.label.trim()} is a new must-have; candidates not yet sent now show it as Not verified.`:`Requirements saved. ${d.label.trim()} added as a nice-to-have.`);
+      return; }
+  }
+});
+document.addEventListener('input',e=>{
+  const el=e.target, a=el.dataset&&el.dataset.act; if(!a) return;
+  if(a==='search'){ S.q=el.value; if(S.q) S.sent.forEach(b=>{if(b.items.some(it=>{const c=S.cands.find(x=>x.name===it.name);return c&&matchQ(c)})) S.openRounds[b.round]=true;}); const pos=el.selectionStart; render('#q'); const q=document.getElementById('q'); q&&q.setSelectionRange(pos,pos);
+    const n=sectionMatches('review').length, d=candidateSections().discarded.filter(matchQ).length, m=candidateSections().sent.filter(matchQ).length;
+    document.getElementById('live').textContent=S.q?`${n} in review, ${d} discarded, and ${m} sent match.`:'Search cleared.'; return; }
+  if(a==='note'&&S.draft){ S.draft.note=el.value; }
+  if(a==='recipients'){ S.send.recipients=el.value; { const mb=document.querySelector('[data-act=markConfirm]'), why=document.getElementById('markWhy'), empty=!el.value.trim(); if(mb) mb.disabled=empty||batch().some(x=>status(x).k!=='meets'&&noNote(x)); if(why) why.hidden=!empty; } if(S.send.err&&el.value.trim()){ S.send.err=false; const x=document.getElementById('rcpErr'); x&&x.remove(); el.removeAttribute('aria-invalid'); el.setAttribute('aria-describedby','rcpHelp'); } }
+  if(reqDraft){ if(a==='rq-label') reqDraft.label=el.value; if(a==='rq-date'){ reqDraft.date=el.value; const sh=document.getElementById('rdShow'); if(sh) sh.textContent=longDate(el.value); } if(a==='rq-said') reqDraft.said=el.value; }
+});
+document.addEventListener('change',e=>{
+  const el=e.target, a=el.dataset&&el.dataset.act; if(!a) return;
+  const c=S.candId?cand(S.candId):null;
+  if(a==='where'&&c&&el.value){ const q=el.dataset.q; c.r[q]={...c.r[q],where:{src:el.value,t:null}}; render(); document.getElementById('live').textContent=`Source saved for ${labelOf(q)}: ${({resume:'Resume',screening:'Screening',note:'Hunter note',other:'Other'})[el.value]}.`; }
+  if(a==='reasonReq'&&S.draft) S.draft.reasonReq=el.value;
+  if(a==='channel'){ S.send.to=S.send.to||{}; S.send.to[S.send.channel]=S.send.recipients; S.send.channel=el.value; S.send.recipients=S.send.to[el.value]||''; S.send.err=false; render('#ch'); }
+  if(reqDraft&&(a==='rq-type'||a==='rq-from')){ if(a==='rq-type') reqDraft.type=el.value; else reqDraft.from=el.value; reqDialog(); const f=dlg.querySelector(`[data-act=${a}][value="${el.value}"]`); f&&f.focus(); }
+});
+render();
+</script>
+</body>
+</html>
